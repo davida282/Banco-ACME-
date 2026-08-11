@@ -1,101 +1,109 @@
-// Se importa el firebase a retiroDinero.js
+import { api, currentUser, formatMoney, newIdempotencyKey } from './api.js';
+import { setBusy, setMessage, setRegionBusy, trapFocus } from './ui.js';
 
-import { db } from './firebaseConfig.js';
-import { get, ref, update, push } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+const form = document.getElementById('withdrawForm');
+const amountInput = document.getElementById('cantidad');
+const continueButton = document.getElementById('confirmarBtn');
+const message = document.getElementById('transactionMessage');
+const modal = document.getElementById('withdrawModal');
+const cancelButton = document.getElementById('cancelWithdraw');
+const commitButton = document.getElementById('commitWithdraw');
+const modalMessage = document.getElementById('modalMessage');
 
-// Espera a que el DOM esté completamente cargado antes de ejecutar el código
-window.addEventListener('DOMContentLoaded', () => {
+let user = null;
+let withdrawalPreview = null;
+let submitting = false;
+let lastFocusedElement = null;
 
-  
-  const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo'));
+const showMessage = (text = '', type = 'error') => setMessage(message, text, type);
 
-  // Si el usuario no se encuentra en el Local Storage como usuario activo, la página dice con una alerta que no ha iniciado sesión y lo redirije a login
-  if (!usuarioActivo) {
-    alert("No has iniciado sesión. Serás redirigido al login.");
-    window.location.href = "login.html";
+function closeModal() {
+  if (modal.hidden || submitting) return;
+  modal.hidden = true;
+  setMessage(modalMessage, '');
+  withdrawalPreview = null;
+  lastFocusedElement?.focus();
+}
+
+function openModal() {
+  lastFocusedElement = document.activeElement;
+  modal.hidden = false;
+  commitButton.focus();
+}
+
+amountInput.addEventListener('input', () => {
+  amountInput.value = amountInput.value.replace(/\D/g, '');
+});
+
+cancelButton.addEventListener('click', closeModal);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeModal();
+  trapFocus(modal, event);
+});
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    user = await currentUser();
+    document.getElementById('numCuenta').value = user.numeroCuenta;
+    document.getElementById('usuario').value = `${user.nombres} ${user.apellidos}`;
+    amountInput.disabled = false;
+    continueButton.disabled = false;
+  } catch {
     return;
+  } finally {
+    setRegionBusy(form, false);
   }
 
-  // Se obtienen las constantes desde las ID propuestas en el HTML
-  const cuentaInput = document.getElementById('numCuenta');
-  const nombreInput = document.getElementById('usuario');
-  const cantidadInput = document.getElementById('cantidad');
-  const confirmarBtn = document.getElementById('confirmarBtn');
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    showMessage();
+    const valor = Number(amountInput.value);
 
-  // Autocompletar los datos del usuario activo
-  cuentaInput.value = usuarioActivo.numeroCuenta || '';
-  nombreInput.value = `${usuarioActivo.nombres} ${usuarioActivo.apellidos}`.trim();
+    if (!Number.isSafeInteger(valor) || valor < 10000) {
+      showMessage('El retiro mínimo es de $10.000.');
+      amountInput.focus();
+      return;
+    }
+    if (valor > Number(user.saldo)) {
+      showMessage('No tienes saldo suficiente para realizar este retiro.');
+      amountInput.focus();
+      return;
+    }
 
-  // Validación de cantidad
-  cantidadInput.addEventListener('input', () => {
-    cantidadInput.value = cantidadInput.value.replace(/[^0-9]/g, '');
+    withdrawalPreview = { valor };
+    document.getElementById('previewAccount').textContent = user.numeroCuenta;
+    document.getElementById('previewUser').textContent = `${user.nombres} ${user.apellidos}`;
+    document.getElementById('previewAmount').textContent = formatMoney(valor);
+    document.getElementById('previewBalance').textContent = formatMoney(user.saldo);
+    document.getElementById('previewRemaining').textContent = formatMoney(Number(user.saldo) - valor);
+    openModal();
   });
 
-  // Se añade un evento para que la persona pueda confirmar los datos
-  confirmarBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-
-
-    const cantidad = cantidadInput.value.trim();
-    const cantidadNumerica = parseInt(cantidad);
-
-    if (!cantidad || isNaN(cantidadNumerica) || cantidadNumerica <= 0) {
-      alert("Ingresa un valor válido mayor a $0.");
-      return;
-    }
-
-    if (cantidadNumerica < 10000) {
-      alert("El valor mínimo de retiro es de $10.000.");
-      return;
-    }
+  commitButton.addEventListener('click', async () => {
+    if (!withdrawalPreview || submitting) return;
+    submitting = true;
+    setBusy(commitButton, true, 'Retirando…');
+    cancelButton.disabled = true;
+    setMessage(modalMessage, '');
 
     try {
-      const userRef = ref(db, `usuarios/${usuarioActivo.numeroCuenta}`);
-      const userSnapshot = await get(userRef);
-
-      if (!userSnapshot.exists()) {
-        alert("No se encontró la cuenta del usuario.");
-        return;
-      }
-
-      const userData = userSnapshot.val();
-
-      if (cantidadNumerica > userData.saldo) {
-        alert("No tienes suficiente saldo para retirar esa cantidad.");
-        return;
-      }
-
-      const nuevoSaldo = userData.saldo - cantidadNumerica;
-      const referencia = Math.floor(1000000000 + Math.random() * 9000000000);
-
-      // Actualizar saldo
-      await update(userRef, { saldo: nuevoSaldo });
-
-      // Guardar transacción como "Retiro"
-      const transaccionRef = ref(db, `transacciones/${usuarioActivo.numeroCuenta}`);
-      await push(transaccionRef, {
-        fecha: new Date().toISOString(),
-        referencia: referencia,
-        tipo: "Retiro",
-        concepto: "Retiro de dinero por canal electrónico",
-        valor: cantidadNumerica
+      const { transaction } = await api('/transactions/withdraw', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': newIdempotencyKey() },
+        body: JSON.stringify({ valor: withdrawalPreview.valor }),
       });
-
-      // Guardar datos para la pantalla de confirmación
-      localStorage.setItem('datosRetiro', JSON.stringify({
-        fecha: new Date().toLocaleString(),
-        referencia: referencia,
-        valor: cantidadNumerica
+      sessionStorage.setItem('datosRetiro', JSON.stringify({
+        fecha: new Date(transaction.fecha).toLocaleString('es-CO'),
+        referencia: transaction.referencia,
+        valor: transaction.valor,
       }));
-
-      localStorage.setItem('permisoRetiro', 'true');
-
-      // Redirigir
-      window.location.href = "/screens/completedRetiro.html";
-
+      sessionStorage.setItem('permisoRetiro', 'true');
+      window.location.href = '/screens/completedRetiro.html';
     } catch (error) {
-      console.error("Error al procesar el retiro:", error);
-      alert("Hubo un error al procesar tu retiro.");
+      setMessage(modalMessage, error.message);
+      submitting = false;
+      setBusy(commitButton, false);
+      cancelButton.disabled = false;
     }
   });
 });

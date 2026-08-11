@@ -1,87 +1,71 @@
-// Se importa el firebase a resultExtract.js
+import { api, currentUser, formatDate, formatMoney } from './api.js';
+import { setRegionBusy } from './ui.js';
 
-import { db } from './firebaseConfig.js';
-import { get, ref } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+const table = document.getElementById('tabla-transacciones');
+const summary = document.getElementById('movementSummary');
+const previousButton = document.getElementById('previousPage');
+const nextButton = document.getElementById('nextPage');
+const pageIndicator = document.getElementById('pageIndicator');
+const tableRegion = document.querySelector('.tabla-contenedor');
+const filters = JSON.parse(localStorage.getItem('filtrosExtracto') ?? 'null');
+let currentPage = 1;
 
-// Espera a que el DOM esté completamente cargado antes de ejecutar el código
-window.addEventListener('DOMContentLoaded', async () => {
+function emptyRow(text) {
+  const row = table.insertRow();
+  const cell = row.insertCell();
+  cell.colSpan = 5;
+  cell.textContent = text;
+}
 
-  // Se obtienen las constantes desde las ID propuestas en el HTML
-  const tablaTransacciones = document.getElementById('tabla-transacciones');
-  const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo'));
-  const filtros = JSON.parse(localStorage.getItem('filtrosExtracto'));
+function transactionRow(tx) {
+  const row = table.insertRow();
+  [formatDate(tx.fecha), tx.referencia, tx.tipo, tx.concepto, formatMoney(tx.valor)].forEach((value) => {
+    const cell = row.insertCell();
+    cell.textContent = String(value ?? '');
+  });
+}
 
-  if (!usuarioActivo || !filtros) {
-    alert("Información incompleta. Redirigiendo al login.");
-    window.location.href = "/html/login.html";
-    return;
-  }
-  
-  // Se inicia el bloque de código que va a manejar los posibles errores que se van presentando
+async function loadPage(page) {
+  previousButton.disabled = true;
+  nextButton.disabled = true;
+  table.replaceChildren();
+  emptyRow('Cargando extracto…');
+  setRegionBusy(tableRegion, true);
+  const query = new URLSearchParams({ year: filters.anio, month: filters.mes, page: String(page) });
   try {
-    const transaccionesRef = ref(db, `transacciones/${usuarioActivo.numeroCuenta}`);
-    const snapshot = await get(transaccionesRef);
+    const { transactions, pagination } = await api(`/transactions?${query}`);
+    currentPage = pagination.page;
+    table.replaceChildren();
+    if (!transactions.length) emptyRow('No hay movimientos registrados para ese mes y año.');
+    else transactions.forEach(transactionRow);
 
-    if (!snapshot.exists()) {
-      tablaTransacciones.innerHTML = `<tr><td colspan="5">No se encontraron transacciones.</td></tr>`;
-      setTimeout(() => window.location.href = "/html/dashboard.html", 3000);
-      return;
-    }
-
-    const transacciones = Object.values(snapshot.val());
-
-    // Filtrar por año y mes
-    const transFiltradas = transacciones.filter(tx => {
-      const fecha = new Date(tx.fecha);
-      const añoTx = fecha.getFullYear();
-      const mesTx = fecha.getMonth() + 1; // 0-indexed
-      return añoTx == filtros.anio && mesTx == parseInt(filtros.mes);
-    });
-
-    if (transFiltradas.length === 0) {
-      tablaTransacciones.innerHTML = `<tr><td colspan="5">No hay movimientos registrados para ese mes y año.</td></tr>`;
-      setTimeout(() => window.location.href = "/html/dashboard.html", 3000);
-      return;
-    }
-
-    // Ordenar por fecha descendente
-    transFiltradas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-    transFiltradas.forEach(tx => {
-      const fila = document.createElement('tr');
-
-      const fecha = new Date(tx.fecha).toLocaleDateString('es-CO', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      fila.innerHTML = `
-        <td>${fecha}</td>
-        <td>${tx.referencia || 'N/A'}</td>
-        <td>${tx.tipo || 'N/A'}</td>
-        <td>${tx.concepto || 'Sin descripción'}</td>
-        <td>$ ${Number(tx.valor).toLocaleString('es-CO')}</td>
-      `;
-
-      tablaTransacciones.appendChild(fila);
-    });
-
+    const first = pagination.total ? ((pagination.page - 1) * pagination.pageSize) + 1 : 0;
+    const last = Math.min(pagination.page * pagination.pageSize, pagination.total);
+    summary.textContent = pagination.total
+      ? `Mostrando ${first}–${last} de ${pagination.total} movimientos del periodo.`
+      : 'No hay movimientos para el periodo seleccionado.';
+    pageIndicator.textContent = `Página ${pagination.page} de ${pagination.totalPages}`;
+    previousButton.disabled = !pagination.hasPrevious;
+    nextButton.disabled = !pagination.hasNext;
   } catch (error) {
-    console.error("Error al obtener el extracto:", error);
-    alert("Hubo un error al cargar el extracto.");
-    window.location.href = "/html/dashboard.html";
+    table.replaceChildren();
+    emptyRow('No fue posible cargar el extracto.');
+    summary.textContent = error.message;
+    pageIndicator.textContent = 'Página no disponible';
+  } finally {
+    setRegionBusy(tableRegion, false);
   }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!filters) { window.location.replace('/html/extractoBancario.html'); return; }
+  try {
+    await currentUser();
+    await loadPage(1);
+  } catch { window.location.replace('/html/login.html'); }
 });
 
-// Botón de volver al dashboard
-document.getElementById('volver').addEventListener('click', () => {
-  window.location.href = "/html/dashboard.html";
-});
-
-// Botón de imprimir
-document.getElementById('btnImprimir').addEventListener('click', () => {
-  window.print();
-});
+previousButton.addEventListener('click', () => { if (currentPage > 1) loadPage(currentPage - 1); });
+nextButton.addEventListener('click', () => loadPage(currentPage + 1));
+document.getElementById('volver').addEventListener('click', () => { window.location.href = '/html/dashboard.html'; });
+document.getElementById('btnImprimir').addEventListener('click', () => window.print());

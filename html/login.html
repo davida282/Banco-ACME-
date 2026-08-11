@@ -1,60 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ACME</title>
-    <link href="/css/login.css" rel="stylesheet" type="text/css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio de sesión - ACME</title>
+  <link href="/css/login.css" rel="stylesheet">
+  <link href="/css/acme-system.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
 <body>
-    <div class="container">
-    <div class="logo">
-      <div><span>banco</span><br><span class="acme">ACME</span></div><img src="/imgs/BancoLogo.png" alt="BancoLogo" class="bancologo">
-    </div>
-    <h2>Inicio de sesión</h2>
-    <!-- Se crea el formulario que permitira guardar las credenciales de login -->
-    <form id="loginForm">
-      <div class="input-group">
-        <!-- Parte del formulario que traera el número de documento y tipo de documento -->
-        <input type="text" id="documento"  placeholder="Documento">
-        <div class="selectcontenedor"><select id="tipoDoc" class="contenedor">
-          <option selected disabled>▼</option>
-          <option value="TI">TI</option>
-          <option value="CC">CC</option>
-          <option value="TE">TE</option>
-          <option value="CE">CE</option>
-        </select></div>
-        
-      </div>
-      
-      <div class="input-group">
-        <!-- Parte del formulario que traerá la contraseña -->
-        <input type="password" id="contrasena" placeholder="Contraseña" minlength="8" maxlength="30" >
-      </div>
-      <!-- Check para que el usuario se mantenga con sesión iniciada -->
-      <div class="remember">
-        <input type="checkbox" id="remember" checked />
-        <label for="remember">Recordar Contraseña</label>
-      </div>
-      <!-- Botón que permite que la persona pueda iniciar sesión -->
-      <button type="submit">Iniciar Sesión</button>
-
-      <!-- Botones que permiten redireccionar en caso de olvidar contraseña o no tener cuenta registrada -->
+  <main class="container">
+    <div class="logo"><div><span>banco</span><br><span class="acme">ACME</span></div><img src="/imgs/BancoLogo.png" alt="Logo de Banco ACME" class="bancologo"></div>
+    <h1>Inicio de sesión</h1>
+    <form id="loginForm" novalidate>
+      <div class="input-group"><label class="sr-only" for="email">Correo electrónico</label><input type="email" id="email" placeholder="Correo electrónico" autocomplete="username" required aria-describedby="formMessage"></div>
+      <div class="input-group"><label class="sr-only" for="contrasena">Contraseña</label><input type="password" id="contrasena" placeholder="Contraseña" autocomplete="current-password" minlength="8" maxlength="72" required aria-describedby="formMessage"></div>
+      <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
+      <button type="submit">Iniciar sesión</button>
       <div class="extras">
         <p class="forgot"><a href="/html/recuperacionContra.html">¿Olvidaste tu contraseña?</a></p>
-        <p class="new">Usuario nuevo? <a href="/html/registro.html">Regístrate aquí</a></p>
+        <p class="new">¿Usuario nuevo? <a href="/html/registro.html">Regístrate aquí</a></p>
       </div>
     </form>
-  </div>
-  
-    <script type="module" src="/js/autenticación.js"></script>
-    
-    
-
+  </main>
+  <script type="module" src="/js/autenticación.js"></script>
 </body>
 </html>

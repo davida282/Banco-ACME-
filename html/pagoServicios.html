@@ -1,59 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pago de Servicios - ACME</title>
-    <link href="/css/pagoServicios.css" rel="stylesheet" type="text/css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pago de servicios | Banco ACME</title>
+  <link href="/css/pagoServicios.css" rel="stylesheet">
+  <link href="/css/acme-system.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
-<body>
-    <div class="container">
-    <div class="titulo">
-      <img src="/imgs/BancoLogo.png" alt="Banco" class="logo">
-      <h1>Pago de Servicios Públicos</h1>
-    </div>
-    <!-- Se incluye un formulario que va a autocompletar con la información del usuario que se encuentra en sesión -->
-    <form class="formulario">
-      <div class="form-group">
-        <label for="cuenta">Núm de cuenta</label>
-        <input type="text" id="cuenta" disabled>
+<body class="acme-page">
+  <main class="container">
+    <div class="titulo"><img src="/imgs/BancoLogo.png" alt="Banco ACME" class="logo"><h1>Pago de servicios</h1></div>
+    <form id="servicePaymentForm" class="formulario" novalidate aria-busy="true">
+      <div class="form-group"><label for="cuenta">Núm. de cuenta</label><input type="text" id="cuenta" disabled></div>
+      <div class="form-group"><label for="usuario">Usuario</label><input type="text" id="usuario" disabled></div>
+      <div class="form-group field-with-message">
+        <label for="servicio">Servicio</label><select id="servicio" disabled aria-describedby="serviceHelp serviceMessage"><option value="">Cargando servicios…</option></select>
+        <p id="serviceHelp" class="field-help">Selecciona un servicio para consultar sus condiciones.</p>
+        <p id="serviceMessage" class="field-message" aria-live="polite"></p>
       </div>
-
-      <div class="form-group">
-        <label for="usuario">Usuario</label>
-        <input type="text" id="usuario" disabled>
+      <div class="form-group field-with-message">
+        <label for="referencia">Referencia</label><input type="text" id="referencia" autocomplete="off" placeholder="Selecciona un servicio primero" disabled required aria-describedby="referenceHelp referenceMessage">
+        <p id="referenceHelp" class="field-help">Cada servicio usa un formato de referencia diferente.</p>
+        <p id="referenceMessage" class="field-message" aria-live="polite"></p>
       </div>
-      <!-- Se pide el servicio público a pagar, la referencia del recibo (número cualquiera de 10 dígitos exactos) y la cantidad de dinero a pagar por dicho recibo -->
-      <div class="form-group">
-        <label for="servicio">Servicio</label>
-        <select id="servicio">
-          <option disabled selected>Seleccionar servicio a pagar</option>
-          <option value="agua">Agua</option>
-          <option value="luz">Luz</option>
-          <option value="gas">Gas</option>
-          <option value="internet">Internet</option>
-        </select>
+      <div class="form-group field-with-message">
+        <label for="cantidad">Valor a pagar (COP)</label><input type="text" id="cantidad" inputmode="numeric" autocomplete="off" placeholder="Valor en pesos colombianos" disabled required aria-describedby="amountHelp amountMessage">
+        <p id="amountHelp" class="field-help">El valor permitido depende del servicio seleccionado.</p>
+        <p id="amountMessage" class="field-message" aria-live="polite"></p>
       </div>
-
-      <div class="form-group">
-        <label for="referencia">Referencia</label>
-        <input type="text" id="referencia" placeholder="Referencia de Recibo">
-      </div>
-
-      <div class="form-group">
-        <label for="cantidad">Cantidad</label>
-        <input type="text" id="cantidad" placeholder="$ Valor a Pagar">
-      </div>
-      <!-- Se incluyen los botones que permiten que el usuario pueda retroceder a el dashboard y que pueda confirmar el pago del servicio -->
-      <div class="botones">
-        <a href="dashboard.html" class="volver">Volver</a>
-        <button type="submit" class="confirmar">CONFIRMAR</button>
-      </div>
+      <div class="botones"><a href="dashboard.html" class="volver">Volver</a><button type="submit" class="confirmar" id="continuePayment" disabled>Continuar</button></div>
+      <p id="transactionMessage" class="transaction-message" role="alert" aria-live="polite"></p>
     </form>
+  </main>
+
+  <div id="servicePaymentModal" class="service-modal" hidden>
+    <section class="service-dialog" role="dialog" aria-modal="true" aria-labelledby="serviceModalTitle" aria-describedby="serviceModalDescription">
+      <p class="modal-eyebrow">Confirmación de pago</p><h2 id="serviceModalTitle">Revisa antes de pagar.</h2>
+      <p id="serviceModalDescription" class="modal-intro">El pago se registrará únicamente después de tu confirmación.</p>
+      <dl class="service-details">
+        <div><dt>Empresa</dt><dd id="previewCompany">—</dd></div><div><dt>Tipo</dt><dd id="previewType">—</dd></div>
+        <div><dt>Servicio</dt><dd id="previewService">—</dd></div><div><dt>Referencia</dt><dd id="previewReference">—</dd></div>
+        <div><dt>Cuenta de pago</dt><dd id="previewAccount">—</dd></div><div><dt>Valor a pagar</dt><dd id="previewAmount">—</dd></div>
+        <div><dt>Saldo disponible</dt><dd id="previewBalance">—</dd></div><div class="balance-after"><dt>Saldo después del pago</dt><dd id="previewRemaining">—</dd></div>
+      </dl>
+      <p id="modalMessage" class="modal-message" role="alert" aria-live="polite"></p>
+      <div class="modal-actions"><button id="cancelPayment" class="modal-cancel" type="button">Cancelar</button><button id="commitPayment" type="button">Pagar servicio</button></div>
+    </section>
   </div>
   <script type="module" src="/js/pagoServicios.js"></script>
 </body>

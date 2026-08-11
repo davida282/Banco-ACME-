@@ -1,54 +1,30 @@
-// Si ya hay una sesión iniciada, evitar que vuelva al login con la flecha atrás
-window.addEventListener('DOMContentLoaded', () => {
-  const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo'));
+import { currentUser } from './api.js';
+import { setBusy, setMessage, setRegionBusy } from './ui.js';
 
-  if (!usuarioActivo) {
-    alert("No has iniciado sesión. Serás redirigido al login.");
-    window.location.href = "login.html";
-    return;
-  }
+const form = document.getElementById('statementForm');
+const message = document.getElementById('statementMessage');
+const submitButton = document.getElementById('confirmarBtn');
 
-  // Se obtienen las constantes desde las ID propuestas en el HTML
-  const cuentaInput = document.getElementById('numCuenta');
-  const nombreInput = document.getElementById('usuario');
-  const anioInput = document.getElementById('anio');
-  const mesSelect = document.getElementById('mes');
-  const confirmarBtn = document.getElementById('confirmarBtn');
-
-  // Autocompletar datos del usuario
-  cuentaInput.value = usuarioActivo.numeroCuenta || '';
-  nombreInput.value = `${usuarioActivo.nombres} ${usuarioActivo.apellidos}`.trim();
-
-  confirmarBtn.addEventListener('click', async (e) => {
-  e.preventDefault();
-
-  // Obtiene y limpia los valores de input año y del mes
-  const anio = anioInput.value.trim();
-  const mes = mesSelect.value;
-
-    // Si el usuario no ingresa valores validos entre el año 2000 y 2099 entonces que el usuario la página alerte
-  if (!anio || isNaN(parseInt(anio)) || parseInt(anio) < 2000 || parseInt(anio) > 2099) {
-    alert("Ingresa un año válido entre 2000 y 2099.");
-    return;
-  }
-
-  // Si la persona no selecciona ningún mes, la página le da una alerta 
-  if (!mes) {
-    alert("Selecciona un mes para generar el extracto.");
-    return;
-  }
-
-  // Se inicia el bloque de código que va a manejar los posibles errores que se van presentando
+window.addEventListener('DOMContentLoaded', async () => {
+  setRegionBusy(form, true);
   try {
-    // Guardar los filtros seleccionados
+    const user = await currentUser();
+    document.getElementById('numCuenta').value = user.numeroCuenta;
+    document.getElementById('usuario').value = `${user.nombres} ${user.apellidos}`;
+  } catch { return; }
+  finally { setRegionBusy(form, false); }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const anio = document.getElementById('anio').value.trim();
+    const mes = document.getElementById('mes').value;
+    if (!/^20\d{2}$/.test(anio) || !mes) {
+      setMessage(message, 'Selecciona un año y un mes válidos.');
+      (!anio ? document.getElementById('anio') : document.getElementById('mes')).focus();
+      return;
+    }
+    setMessage(message, '', 'info');
+    setBusy(submitButton, true, 'Generando extracto…');
     localStorage.setItem('filtrosExtracto', JSON.stringify({ anio, mes }));
-
-    // Redirigir a la pantalla de resultado
-    window.location.href = "/screens/resultExtracto.html";
-
-  } catch (error) {
-    console.error("Error al generar el extracto:", error);
-    alert("Ocurrió un error al intentar obtener el extracto.");
-  }
-});
+    window.location.href = '/screens/resultExtracto.html';
+  });
 });

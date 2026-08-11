@@ -1,37 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificado Bancario - ACME</title>
     <link href="/css/certificadoBanc.css" rel="stylesheet" type="text/css">
+    <link href="/css/acme-system.css" rel="stylesheet" type="text/css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
-<body>
-    <div class="container">
+<body class="acme-page certificate-page">
+    <main class="container" aria-busy="true">
     <div class="logo">
       
       <div>
         <span>banco</span>
         <div class="acme">ACME</div>
-      </div><img src="/imgs/BancoLogo.png" alt="logo" class="bancologo">
+      </div><img src="/imgs/BancoLogo.png" alt="Logo de Banco ACME" class="bancologo">
     </div>
 
     <p>Señor(a)</p>
     <br>
-    <p id="mensajeCertificado">Cargando...</p>
+    <p id="mensajeCertificado" class="ui-message" role="status" aria-live="polite">Cargando certificado…</p>
     <!-- Apartado donde se incluira la tabla generada del certificado Bancario -->
     <br><br>
+    <div class="tabla-contenedor" tabindex="0" aria-label="Tabla del producto bancario certificado">
     <table>
+      <caption class="sr-only">Producto bancario certificado</caption>
       <thead>
         <tr>
-          <th>Producto</th>
-          <th>No. Producto</th>
-          <th>Fecha Apertura</th>
-          <th>Estado</th>
+          <th scope="col">Producto</th>
+          <th scope="col">N.º de producto</th>
+          <th scope="col">Fecha de apertura</th>
+          <th scope="col">Estado</th>
         </tr>
       </thead>
       <tbody>
@@ -43,13 +47,14 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <br>
     <!-- Botones que permiten que el usuario pueda pueda volver a el dashboard o imprimir el certificado bancario -->
-    <button id="volver">Volver</button>
-    <button id="imprimir">Imprimir certificado</button>
+    <button id="volver" type="button">Volver</button>
+    <button id="imprimir" type="button">Imprimir certificado</button>
 
-  </div>
+  </main>
     <script type="module" src="/js/certificadobanc.js"></script>
 </body>
 </html>

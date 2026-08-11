@@ -1,53 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario de Recuperación - ACME</title>
-    <link href="/css/recuperacionContra.css" rel="stylesheet" type="text/css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperación de contraseña - ACME</title>
+  <link href="/css/recuperacionContra.css" rel="stylesheet">
+  <link href="/css/acme-system.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
 <body>
-    <div class="container">
-    <div class="logo">
-      <div><span>banco</span><br><span class="acme">ACME</span></div>
-      <img src="/imgs/BancoLogo.png" alt="BancoLogo" class="bancologo">
-    </div>
-    <h2>Recuperación de contraseña</h2>
-    <div class="form-box">
-      
-      <!-- Se incluye un formulario que va a pedirle a el usuario que introduzca el número de documento, tipo de documento y correo electrónico que va a permitir que el usuario pueda recuperar su contraseña -->
-      <form id="recuperarForm">
-        <p class="label">Introduzca el documento y tipo de documento</p>
-        <div class="input-group">
-          <input type="text" id="documento" placeholder="">
-          <div class="selectcontenedor">
-            <select id="tipoDoc" class="contenedor">
-              <option selected>▼</option>
-              <option value="TI">TI</option>
-              <option value="CC">CC</option>
-              <option value="TE">TE</option>
-              <option value="CE">CE</option>
-            </select>
-          </div>
-        </div>
-
-        <p class="label">Introduzca su correo electronico</p>
-        <div class="input-group">
-          <input type="email" id="correo" placeholder="">
-        </div>
-        <!-- Se introducen los botones que permiten que el usuario pueda enviar el dinero o volver a el login  -->
-        <button type="submit">Enviar</button>
-
-        <div class="extras">
-          <p class="forgot"><a href="/html/login.html">Volver</a></p>
-        </div>
-      </form>
-    </div>
-  </div>
-    <script type="module" src="/js/recuperacionContra.js"></script>
+  <main class="container"><div class="logo"><div><span>banco</span><br><span class="acme">ACME</span></div><img src="/imgs/BancoLogo.png" alt="Logo de Banco ACME" class="bancologo"></div>
+    <h1>Recuperación de contraseña</h1><div class="form-box"><form id="recuperarForm" novalidate>
+      <p class="label" id="recoveryHelp">Introduce el correo asociado a tu cuenta.</p>
+      <div class="input-group"><label class="sr-only" for="correo">Correo electrónico</label><input type="email" id="correo" autocomplete="email" placeholder="Correo electrónico" required aria-describedby="recoveryHelp formMessage"></div>
+      <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
+      <button type="submit">Enviar enlace</button>
+      <div class="extras"><p class="forgot"><a href="/html/login.html">Volver</a></p></div>
+    </form></div>
+  </main>
+  <script type="module" src="/js/recuperacionContra.js"></script>
 </body>
 </html>

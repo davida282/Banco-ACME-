@@ -1,142 +1,66 @@
-// Se importa el firebase a register.js
-
-import { db } from './firebaseConfig.js';
-import { get, ref, set } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+import { api, formatMoney } from './api.js';
+import { setBusy, setMessage } from './ui.js';
 
 const form = document.getElementById('registroForm');
-    const documentoInput = document.getElementById('documento');
+const message = document.getElementById('formMessage');
+const submitButton = form.querySelector('button[type="submit"]');
+const ids = ['tipoDoc', 'documento', 'nombres', 'apellidos', 'genero', 'email', 'telefono', 'direccion', 'ciudad', 'contrasena', 'confirmarContrasena'];
+const fields = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+const namePattern = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[\s'-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Impedir letras y limitar a 10 caracteres
-    documentoInput.addEventListener('input', (e) => {
-  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    });
-    const telefonoInput = document.getElementById('telefono');
-    telefonoInput.addEventListener('input', (e) => {
-  e.target.value = e.target.value.replace(/\D/g, '');
+function setFieldMessage(id, text = '', valid = false) {
+  const input = fields[id];
+  const output = document.getElementById(`${id}Error`);
+  if (!input || !output) return;
+  output.textContent = text;
+  output.classList.toggle('valid', valid && Boolean(text));
+  input.setAttribute('aria-invalid', text && !valid ? 'true' : 'false');
+}
+
+function passwordError(value) {
+  if (value.length < 8 || value.length > 72) return 'Usa entre 8 y 72 caracteres.';
+  if (/\s/.test(value)) return 'No uses espacios en la contraseña.';
+  if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/\d/.test(value) || !/[^A-Za-z0-9]/.test(value)) return 'Incluye mayúscula, minúscula, número y símbolo.';
+  return '';
+}
+
+function validateField(id) {
+  const value = fields[id].value.trim();
+  let error = '';
+  if (id === 'tipoDoc' || id === 'genero' || id === 'ciudad') error = value ? '' : 'Selecciona una opción.';
+  if (id === 'documento' || id === 'telefono') error = /^\d{10}$/.test(value) ? '' : 'Debe tener exactamente 10 dígitos.';
+  if (id === 'nombres' || id === 'apellidos') error = namePattern.test(value) && value.length >= 2 && value.length <= 40 ? '' : 'Usa entre 2 y 40 letras, espacios, apóstrofes o guiones.';
+  if (id === 'email') error = value.length <= 254 && emailPattern.test(value) ? '' : 'Escribe un correo electrónico válido.';
+  if (id === 'direccion') error = value.length >= 6 && value.length <= 255 ? '' : 'La dirección debe tener entre 6 y 255 caracteres.';
+  if (id === 'contrasena') error = passwordError(fields.contrasena.value);
+  if (id === 'confirmarContrasena') error = fields.confirmarContrasena.value === fields.contrasena.value && fields.confirmarContrasena.value ? '' : 'Las contraseñas deben coincidir.';
+  setFieldMessage(id, error);
+  return !error;
+}
+
+for (const id of ['documento', 'telefono']) fields[id].addEventListener('input', (event) => { event.target.value = event.target.value.replace(/\D/g, '').slice(0, 10); validateField(id); });
+for (const id of ['nombres', 'apellidos']) fields[id].addEventListener('input', (event) => { event.target.value = event.target.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'-]/g, ''); validateField(id); });
+for (const id of ids.filter((id) => !['documento', 'telefono', 'nombres', 'apellidos'].includes(id))) fields[id].addEventListener('blur', () => validateField(id));
+fields.contrasena.addEventListener('input', () => { validateField('contrasena'); if (fields.confirmarContrasena.value) validateField('confirmarContrasena'); });
+fields.confirmarContrasena.addEventListener('input', () => validateField('confirmarContrasena'));
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setMessage(message, '', 'error');
+  const valid = ids.map(validateField).every(Boolean);
+  if (!valid) { setMessage(message, 'Revisa los campos marcados antes de continuar.'); form.querySelector('[aria-invalid="true"]')?.focus(); return; }
+  const data = {
+    tipoDocumento: fields.tipoDoc.value, genero: fields.genero.value, ciudad: fields.ciudad.value,
+    documento: fields.documento.value.trim(), telefono: fields.telefono.value.trim(), nombres: fields.nombres.value.trim(),
+    apellidos: fields.apellidos.value.trim(), direccion: fields.direccion.value.trim(), contrasena: fields.contrasena.value,
+    email: fields.email.value.trim(),
+  };
+  setBusy(submitButton, true, 'Creando cuenta…');
+  try {
+    const { user } = await api('/auth/register', { method: 'POST', body: JSON.stringify(data) });
+    setMessage(message, `Cuenta creada con ${formatMoney(user.saldo)}. Tu número de cuenta es ${user.numeroCuenta}. Ya puedes iniciar sesión.`, 'success');
+    form.reset();
+  } catch (error) { setMessage(message, error.message); }
+  finally { setBusy(submitButton, false); }
 });
-    const nombresInput = document.getElementById('nombres');
-    const apellidosInput = document.getElementById('apellidos');
-
-    // Solo letras (permite tildes y espacios)
-    const soloLetras = (e) => {
-    e.target.value = e.target.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
-    };
-
-nombresInput.addEventListener('input', soloLetras);
-apellidosInput.addEventListener('input', soloLetras);
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault(); 
-      
-        // Captura los valores
-        const tipoDoc = document.getElementById('tipoDoc').value;
-        const genero = document.getElementById('genero').value;
-        const ciudad = document.getElementById('ciudad').value;
-        const documento = document.getElementById('documento').value.trim();
-        const telefono = document.getElementById('telefono').value.trim();
-        const nombres = document.getElementById('nombres').value.trim();
-        const apellidos = document.getElementById('apellidos').value.trim();
-        const direccion = document.getElementById('direccion').value.trim();
-        const contrasena = document.getElementById('contrasena').value.trim();
-        const email = document.getElementById('email').value.trim();
-      
-        // Si los campos no se encuentran completados, entonces el programa tira una alerta pidiendole que los complete
-        if (
-          tipoDoc === "Tipo de documento" || tipoDoc === "" ||
-          genero === "Género" || genero === "" ||
-          ciudad === "Ciudad de residencia" || ciudad === "" ||
-          documento === "" || telefono === "" || nombres === "" ||
-          apellidos === "" || direccion === "" || contrasena === "" || email === ""
-        ) {
-          alert("Todos los campos son obligatorios. Por favor complétalos.");
-          return; 
-        }
-        
-        // Validación para que nombres y apellidos sean solo letras
-        const regexSoloLetras = /^[a-zA-ZÁÉÍÓÚáéíóúÑñ\s]+$/;
-
-        if (!regexSoloLetras.test(nombres) || !regexSoloLetras.test(apellidos)) {
-            alert("Los nombres y apellidos deben contener solo letras.");
-        return;
-        }
-
-        // Se inicia el bloque de código que va a manejar los posibles errores que se van presentando
-        try {
-            
-        const usuariosRef = ref(db, 'usuarios');
-        const snapshotUsuarios = await get(usuariosRef);
-
-        // Validación del documento
-        const regexNumeros = /^\d{10}$/;
-        if (!regexNumeros.test(documento)) {
-        alert("El número de documento debe tener exactamente 10 dígitos numéricos.");
-        return;
-     }
-
-     // Si el número de telefono no contiene exactamente 10 dígitos, la página le tira una alerta pidiendole que ingrese los 10 dígitos 
-     if (telefono.length !== 10) {
-        alert("El número de teléfono debe tener exactamente 10 dígitos.");
-        return;
-      }
-        
-        
-        if (snapshotUsuarios.exists()) {
-        const usuarios = snapshotUsuarios.val();
-      
-      for (let key in usuarios) {
-        const usuario = usuarios[key];
-        // Si el usuario ingresa datos que ya se encuentran en la base de datos, entonces la página tira una alerta diciendo que ya existe
-        if (usuario.documento === documento) {
-          alert("Ya existe un usuario con este número de documento.");
-          return;
-        }
-        if (usuario.telefono === telefono) {
-          alert("Ya existe un usuario con este número de teléfono.");
-          return;
-        }
-        if (usuario.email === email) {
-          alert("Ya existe un usuario con este correo electrónico.");
-          return;
-        }
-      }
-    }
-            // Obtener el contador actual
-            const contadorRef = ref(db, 'contadorCuentas');
-            const snapshot = await get(contadorRef);
-        
-            let numeroCuenta = 1000000000000000;
-            if (snapshot.exists()) {
-              numeroCuenta = snapshot.val() + 1;
-            }
-        
-            // Actualizar el contador en Firebase
-            await set(contadorRef, numeroCuenta);
-        
-            // Guardar el usuario con su número de cuenta
-            const userId = numeroCuenta;
-            // Datos que van a guardarse en el Firebase
-            await set(ref(db, 'usuarios/' + userId), {
-             numeroCuenta: numeroCuenta,
-              tipoDocumento: tipoDoc,
-              genero: genero,
-              ciudad: ciudad,
-              documento: documento,
-              telefono: telefono,
-              nombres: nombres,
-              apellidos: apellidos,
-              direccion: direccion,
-              contrasena: contrasena,
-              email: email,
-              fechaCreacion: new Date().toISOString(),
-              saldo: 500000
-            });
-        
-            alert(`Usuario registrado exitosamente.\nNúmero de cuenta: ${numeroCuenta}`);
-            form.reset();
-        
-          } catch (error) {
-            console.error("Error al registrar usuario:", error);
-            alert("Ocurrió un error al registrar el usuario.");
-          }
-        });
-      

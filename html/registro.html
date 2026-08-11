@@ -1,119 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - ACME</title>
-    <link href="/css/registro.css" rel="stylesheet" type="text/css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abrir cuenta | Banco ACME</title>
+  <link href="/css/registro.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
 <body>
-     <div class="container">
-    <div class="logo">
-      <div><span>banco</span><br> <span class="acme">ACME</span></div><img src="/imgs/BancoLogo.png" alt="BancoLogo" class="bancologo">
-    </div>
-    <h2>Registro</h2>
-    <form id="registroForm">
-      <!-- Se introduce el formulario que va a permitir que el usuario seleccione primeramente su tipo de documento -->
-      <div class="input-group">
-        <select id="tipoDoc">
-          <option value="" selected disabled>Tipo de documento</option>
-          <option value="TI">TI</option>
-          <option value="CC">CC</option>
-          <option value="TE">TE</option>
-          <option value="CE">CE</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <!-- Se introduce la opcion que permite al usuario escoger su género -->
-        <select id="genero">
-          <option value="" selected disabled>Género</option>
-          <option value="Masculino">Masculino</option>
-          <option value="Femenino">Femenino</option>
-        </select>
-      </div>
-
-      <div class="input-group">
-        <!-- Se introducen los inputs para que la persona pueda escribir su número de documento, número de telefono, nombres, dirección y apellidos -->
-        <input type="text" id="documento" placeholder="Número de documento" />
-      </div>
-      <div class="input-group">
-        <input type="text" id="telefono" placeholder="Número de teléfono" />
-      </div>
-
-      <div class="input-group">
-        <input type="text" id="nombres" minlength="3" maxlength="40" placeholder="Nombres"/>
-      </div>
-      <div class="input-group">
-        <input type="text" id="direccion" minlength="6"  placeholder="Dirección" />
-      </div>
-
-      <div class="input-group">
-        <input type="text" id="apellidos"  minlength="3" maxlength="40" placeholder="Apellidos"/>
-      </div>
-      <div class="input-group">
-        <!-- Se introduce la opción que permite que la persona pueda elegir su ciudad de residencia -->
-        <select id="ciudad">
-          <option value="" selected disabled>Ciudad de residencia</option>
-          <option value="Bogotá">Bogotá</option>
-<option value="Medellín">Medellín</option>
-<option value="Cali">Cali</option>
-<option value="Barranquilla">Barranquilla</option>
-<option value="Cartagena">Cartagena</option>
-<option value="Bucaramanga">Bucaramanga</option>
-<option value="Manizales">Manizales</option>
-<option value="Pereira">Pereira</option>
-<option value="Armenia">Armenia</option>
-<option value="Cúcuta">Cúcuta</option>
-<option value="Ibagué">Ibagué</option>
-<option value="Pasto">Pasto</option>
-<option value="Popayán">Popayán</option>
-<option value="Santa Marta">Santa Marta</option>
-<option value="Villavicencio">Villavicencio</option>
-<option value="Neiva">Neiva</option>
-<option value="Valledupar">Valledupar</option>
-<option value="Montería">Montería</option>
-<option value="Tunja">Tunja</option>
-<option value="Riohacha">Riohacha</option>
-<option value="Quibdó">Quibdó</option>
-<option value="Florencia">Florencia</option>
-<option value="Yopal">Yopal</option>
-<option value="Mocoa">Mocoa</option>
-<option value="San Andrés">San Andrés</option>
-<option value="Arauca">Arauca</option>
-<option value="Puerto Carreño">Puerto Carreño</option>
-<option value="Inírida">Inírida</option>
-<option value="Mitú">Mitú</option>
-<option value="Leticia">Leticia</option>
-        </select>
-      </div>
-
-      <div class="input-group">
-       <!-- Se introducen los inputs para que la persona escriba la contraseña y el correo electrónico -->
-        <input type="password" id="contrasena" minlength="8" maxlength="30" placeholder="Contraseña" />
-      </div>
-      <div class="input-group">
-        
-        <input type="email" id="email" placeholder="Correo Electrónico" />
-      </div>
-
-      <div class="button-container">
-        <!-- Se introduce el boton para que la persona pueda crear la cuenta o en caso de que ya tenga pueda iniciar sesión -->
-        <button type="submit">Crear cuenta</button>
-      </div>
-
-      <div class="extra-links">
-        
-        <span>Ya tienes cuenta? <a href="/html/login.html">Inicia sesión</a></span>
-      </div>
+  <main class="registration-shell">
+    <div class="logo"><img src="/imgs/BancoLogo.png" alt="Banco ACME" class="bancologo"><div class="logo-copy">Banco<strong>ACME</strong></div></div>
+    <p class="eyebrow">Apertura digital</p>
+    <h1>Abre tu cuenta.</h1>
+    <p class="intro">Completa tus datos para crear una cuenta de demostración segura. Tu cuenta iniciará con un saldo de COP 500.000 para probar las funciones bancarias.</p>
+    <form id="registroForm" class="registration-form" novalidate>
+      <fieldset class="form-section"><legend>Identificación</legend><div class="field-grid">
+        <div class="field"><label for="tipoDoc">Tipo de documento</label><select id="tipoDoc" required aria-describedby="tipoDocError"><option value="">Selecciona una opción</option><option value="TI">TI</option><option value="CC">CC</option><option value="TE">TE</option><option value="CE">CE</option></select><small id="tipoDocError" class="field-message"></small></div>
+        <div class="field"><label for="documento">Número de documento</label><input type="text" id="documento" inputmode="numeric" autocomplete="off" maxlength="10" required aria-describedby="documentoError"><small id="documentoError" class="field-message"></small></div>
+        <div class="field"><label for="nombres">Nombres</label><input type="text" id="nombres" autocomplete="given-name" minlength="2" maxlength="40" required aria-describedby="nombresError"><small id="nombresError" class="field-message"></small></div>
+        <div class="field"><label for="apellidos">Apellidos</label><input type="text" id="apellidos" autocomplete="family-name" minlength="2" maxlength="40" required aria-describedby="apellidosError"><small id="apellidosError" class="field-message"></small></div>
+        <div class="field"><label for="genero">Género</label><select id="genero" required aria-describedby="generoError"><option value="">Selecciona una opción</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="No especificado">Prefiero no indicarlo</option></select><small id="generoError" class="field-message"></small></div>
+      </div></fieldset>
+      <fieldset class="form-section"><legend>Contacto</legend><div class="field-grid">
+        <div class="field"><label for="email">Correo electrónico</label><input type="email" id="email" autocomplete="email" maxlength="254" required aria-describedby="emailError"><small id="emailError" class="field-message"></small></div>
+        <div class="field"><label for="telefono">Teléfono</label><input type="tel" id="telefono" inputmode="numeric" autocomplete="tel" maxlength="10" required aria-describedby="telefonoError"><small id="telefonoError" class="field-message"></small></div>
+        <div class="field field-wide"><label for="direccion">Dirección</label><input type="text" id="direccion" autocomplete="street-address" minlength="6" maxlength="255" required aria-describedby="direccionError"><small id="direccionError" class="field-message"></small></div>
+        <div class="field"><label for="ciudad">Ciudad de residencia</label><select id="ciudad" autocomplete="address-level2" required aria-describedby="ciudadError"><option value="">Selecciona una ciudad</option><option>Bogotá</option><option>Medellín</option><option>Cali</option><option>Barranquilla</option><option>Cartagena</option><option>Bucaramanga</option><option>Manizales</option><option>Pereira</option><option>Armenia</option><option>Cúcuta</option><option>Ibagué</option><option>Pasto</option><option>Popayán</option><option>Santa Marta</option><option>Villavicencio</option><option>Neiva</option><option>Valledupar</option><option>Montería</option><option>Tunja</option><option>Riohacha</option><option>Quibdó</option><option>Florencia</option><option>Yopal</option><option>Mocoa</option><option>San Andrés</option><option>Arauca</option><option>Puerto Carreño</option><option>Inírida</option><option>Mitú</option><option>Leticia</option></select><small id="ciudadError" class="field-message"></small></div>
+      </div></fieldset>
+      <fieldset class="form-section"><legend>Acceso seguro</legend><div class="field-grid">
+        <div class="field"><label for="contrasena">Contraseña</label><input type="password" id="contrasena" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="contrasenaHelp contrasenaError"><p id="contrasenaHelp" class="password-help">8–72 caracteres, con mayúscula, minúscula, número y símbolo.</p><small id="contrasenaError" class="field-message"></small></div>
+        <div class="field"><label for="confirmarContrasena">Confirmar contraseña</label><input type="password" id="confirmarContrasena" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="confirmarContrasenaError"><small id="confirmarContrasenaError" class="field-message"></small></div>
+      </div></fieldset>
+      <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
+      <div class="button-container"><div class="extra-links">¿Ya tienes cuenta? <a href="/html/login.html">Inicia sesión</a></div><button type="submit">Crear cuenta</button></div>
     </form>
-  </div>
+  </main>
   <script type="module" src="/js/register.js"></script>
-  </script>
-    
 </body>
 </html>

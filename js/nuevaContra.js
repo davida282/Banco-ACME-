@@ -1,96 +1,24 @@
-// Se importa el firebase a nuevaContra.js 
+import { api } from './api.js';
+import { setBusy, setMessage } from './ui.js';
 
-import { db } from './firebaseConfig.js';
-import { get, update, ref } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+const resetToken = new URLSearchParams(window.location.search).get('token');
+if (resetToken) history.replaceState({}, document.title, window.location.pathname);
+if (!resetToken) window.location.replace('/html/login.html');
 
-// Espera a que el DOM esté completamente cargado antes de ejecutar el código
-document.addEventListener("DOMContentLoaded", () => {
-  
-  // Obtiene el formulario de recuperación de contraseña, el campo de contraseña y el campo para confirmar contraseña
-  const form = document.getElementById("recuperarForm");
-  const inputContrasena = document.getElementById("contrasena");
-  const inputConfirmar = document.getElementById("confirmarContra");
+const form = document.getElementById('recuperarForm');
+const message = document.getElementById('formMessage');
+const submitButton = form.querySelector('button[type="submit"]');
+const showMessage = (text, type = 'error') => setMessage(message, text, type);
 
-  // Bloquear entrada directa
-  const accesoValido = sessionStorage.getItem('recuperacionValida');
-  if (accesoValido !== 'true') {
-    alert("No puedes acceder a esta página directamente.");
-    window.location.href = "/html/login.html";
-    return;
-  }
-
-  // Bloquear navegación atrás
-  history.pushState(null, null, location.href);
-  window.addEventListener('popstate', () => {
-    history.pushState(null, null, location.href);
-  });
-
-  // Limitar longitud máxima en tiempo real
-  [inputContrasena, inputConfirmar].forEach(input => {
-    input.addEventListener('input', () => {
-      if (input.value.length > 16) {
-        input.value = input.value.slice(0, 16);
-      }
-    });
-  });
-
-  // Extraer UID de la URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const uid = urlParams.get("uid");
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const nuevaContra = inputContrasena.value.trim();
-    const confirmarContra = inputConfirmar.value.trim();
-
-    if (!nuevaContra || !confirmarContra) {
-      alert("Por favor, complete ambos campos de contraseña.");
-      return;
-    }
-
-    if (nuevaContra.length < 8) {
-      alert("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-
-    if (nuevaContra !== confirmarContra) {
-      alert("Las contraseñas no coinciden.");
-      return;
-    }
-
-    if (!uid) {
-      alert("No se encontró el usuario. Intente nuevamente desde el inicio.");
-      return;
-    }
-
-    try {
-      const userRef = ref(db, `usuarios/${uid}`);
-      const snapshot = await get(userRef);
-
-      if (snapshot.exists()) {
-        const usuario = snapshot.val();
-        const contraActual = usuario.contrasena;
-
-        if (contraActual === nuevaContra) {
-          alert("La nueva contraseña no puede ser igual a la contraseña actual.");
-          return;
-        }
-
-        await update(userRef, { contrasena: nuevaContra });
-
-        // Todo bien, borrar el acceso temporal
-        sessionStorage.removeItem('recuperacionValida');
-
-        alert("Contraseña cambiada con éxito.");
-        window.location.href = "/html/login.html";
-      } else {
-        alert("No se encontró el usuario.");
-      }
-
-    } catch (error) {
-      console.error("Error al actualizar la contraseña:", error);
-      alert("Ocurrió un error al cambiar la contraseña. Intenta más tarde.");
-    }
-  });
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const contrasena = document.getElementById('contrasena').value;
+  const confirmacion = document.getElementById('confirmarContra').value;
+  if (contrasena.length < 12 || contrasena !== confirmacion) return showMessage('Usa una contraseña de al menos 12 caracteres y confírmala correctamente.');
+  setBusy(submitButton, true, 'Actualizando contraseña…');
+  try {
+    await api('/auth/reset-password', { method: 'POST', body: JSON.stringify({ resetToken, contrasena }) });
+    window.location.replace('/html/login.html');
+  } catch (error) { showMessage(error.message); }
+  finally { setBusy(submitButton, false); }
 });

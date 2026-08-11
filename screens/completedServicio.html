@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Pago Exitoso</title>
-  <link href="/css/completedServicio.css" rel="stylesheet" type="text/css">
+    <link href="/css/completedServicio.css" rel="stylesheet" type="text/css">
+    <link href="/css/acme-system.css" rel="stylesheet" type="text/css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
-<body>
+<body class="acme-page receipt-page">
   <div class="resumen-transaccion">
     <!-- Se introducen los span que van a contener la información sobre el servicio público pago -->
     <h1>Transacción Exitosa </h1>
@@ -17,11 +19,12 @@
     <p><strong>Número de Referencia:</strong> <span id="referencia"></span></p>
     <p><strong>Tipo:</strong> <span id="tipoTransaccion"></span></p>
     <p><strong>Descripción:</strong> <span id="descripcion"></span></p>
-    <p><strong>Valor:</strong> $<span id="valor"></span></p>
-    <div class="volver" id="volver">Volver al inicio</a>
-      
+    <p><strong>Valor:</strong> <span id="valor"></span></p>
+    <div class="receipt-actions">
+      <button id="imprimir" type="button">Imprimir certificado</button>
+      <button type="button" class="volver" id="volver">Volver al inicio</button>
+    </div>
   </div>
-  <button id="imprimir">Imprimir certificado</button>
 
   <script type="module" src="/js/completedServicio.js"></script>
 </body>

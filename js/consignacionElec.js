@@ -1,185 +1,125 @@
-// Se importa el firebase a consignacionElec.js 
+import { api, currentUser, formatMoney, newIdempotencyKey } from './api.js';
+import { setBusy, setMessage, setRegionBusy, trapFocus } from './ui.js';
 
-import { db } from './firebaseConfig.js';
-import { get, ref, update, push } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+const form = document.getElementById('transferForm');
+const account = document.getElementById('numCuenta');
+const value = document.getElementById('cantidad');
+const continueButton = document.getElementById('confirmarBtn');
+const message = document.getElementById('transactionMessage');
+const modal = document.getElementById('transferModal');
+const cancelButton = document.getElementById('cancelTransfer');
+const commitButton = document.getElementById('commitTransfer');
+const modalMessage = document.getElementById('modalMessage');
+const accountHelp = document.getElementById('accountHelp');
+const retryRecipients = document.getElementById('retryRecipients');
+let transferPreview = null;
+let submitting = false;
 
+const showMessage = (text = '', type = 'error') => setMessage(message, text, type);
+const closeModal = () => { modal.hidden = true; setMessage(modalMessage, ''); continueButton.focus(); };
 
-
-const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo'));
-
-// Espera a que el DOM esté completamente cargado antes de ejectura el código
-window.addEventListener('DOMContentLoaded', () => {
-
-  // Obtiene el usuario almacenado en el localStorage
-  const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo'));
-
-  // Si no se encuentra el usuario con una cuenta en sesión, entonces que le alerte que no ha iniciado sesión y lo redirija a el login
-if (!usuarioActivo) {
-  alert("No has iniciado sesión. Serás redirigido al login.");
-  window.location.href = "login.html";
+function renderRecipients(recipients) {
+  account.replaceChildren();
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = recipients.length ? 'Selecciona una cuenta activa' : 'No hay otras cuentas activas';
+  account.append(placeholder);
+  recipients.forEach((recipient) => {
+    const option = document.createElement('option');
+    option.value = recipient.numeroCuenta;
+    option.textContent = `${recipient.nombreCompleto} — ${recipient.numeroCuenta}`;
+    account.append(option);
+  });
+  account.disabled = recipients.length === 0;
+  continueButton.disabled = recipients.length === 0;
 }
 
-// Se obtienen las constantes desde las ID propuestas en el HTML
- const cuentaInput = document.getElementById('numCuenta');
-  
-  const nombreInput = document.getElementById('usuario');
-  
-  const cantidadInput = document.getElementById('cantidad');
+function showAccountState(text, type = 'info') {
+  accountHelp.textContent = text;
+  accountHelp.dataset.state = type;
+}
 
-// Este Evento permite solamente letras en el input 
-nombreInput.addEventListener('input', () => {
-  nombreInput.value = nombreInput.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
-});
-
-// Este Evento permite solamente números en el input y limíta a 10 caracteres
-cuentaInput.addEventListener('input', () => {
-  cuentaInput.value = cuentaInput.value.replace(/\D/g, '');
-});
-
-cantidadInput.addEventListener('input', () => {
-  cantidadInput.value = cantidadInput.value.replace(/[^0-9.]/g, '');
-});
-
-// Constate que agarra el id obtenido del boton de confirmar del HTML
-const confirmarBtn = document.getElementById('confirmarBtn');
-
-// Agrega un evento al botón cuando se hace click
-confirmarBtn.addEventListener('click', async (e) => {
-  // Evita que el evento realice su acción predeterminada 
-  e.preventDefault();
-
-  // Obtiene y limpia los valores ingresados
-  const numeroCuenta = cuentaInput.value.trim();
-  const nombreIngresado = nombreInput.value.trim().toLowerCase();
-  const cantidad = cantidadInput.value.trim();
-
-  // Si el usuario deja alguno de los campos vacios, que la página le alerte que todos los campos son obligatorios
-  if (!numeroCuenta || !nombreIngresado || !cantidad) {
-    alert("Todos los campos son obligatorios.");
-    return;
-  }
-
-  // Si el usuario ingresa menos de 16 digitos en el numero de cuenta, la página le alerta
-  const regexCuenta = /^\d{16}$/;
-  if (!regexCuenta.test(numeroCuenta)) {
-    alert("El número de cuenta debe tener exactamente 16 dígitos numéricos.");
-    return;
-  }
-
-  // Si el trata de ingresar cualquier otro dígito que no sean letras o espacios, la página le alerta 
-  const regexNombre = /^[a-zA-ZÁÉÍÓÚáéíóúÑñ\s]+$/;
-  if (!regexNombre.test(nombreIngresado)) {
-    alert("El nombre de usuario solo puede contener letras y espacios.");
-    return;
-  }
-
-  // Si el usuario ingresa un número menor o igual a cero, la página le alerta
-  const cantidadNumerica = parseFloat(cantidad);
-
-  if (isNaN(cantidadNumerica) || cantidadNumerica <= 0) {
-    alert("La cantidad ingresada debe ser un número mayor a 0.");
-    return;
-  }
-
-  // Se inicia el bloque de código que va a manejar los posibles errores que se van presentando
+async function loadRecipients() {
+  account.replaceChildren(new Option('Cargando cuentas activas…', ''));
+  account.disabled = true;
+  continueButton.disabled = true;
+  retryRecipients.hidden = true;
+  showAccountState('Consultando las cuentas disponibles…');
   try {
-    // Consultar la cuenta destino
-    const destinoRef = ref(db, `usuarios/${numeroCuenta}`);
-    // Generar UNA vez la referencia
-    const numeroReferencia = Math.floor(100000000 + Math.random() * 900000000);
-    const snapshotDestino = await get(destinoRef);
-  
-    // Verifica que la cuenta a la que se enviara el dinero exista en el firebase, si no existe la alerta la página alerta
-    if (!snapshotDestino.exists()) {
-      alert("El número de cuenta ingresado no existe.");
-      return;
+    const { recipients } = await api('/transfers/recipients');
+    renderRecipients(recipients);
+    if (recipients.length) {
+      showAccountState('Selecciona el nombre; el número de cuenta aparece a su lado.', 'success');
+    } else {
+      showAccountState('No hay otras cuentas activas disponibles para consignar.', 'info');
     }
+  } catch {
+    account.replaceChildren(new Option('Cuentas no disponibles', ''));
+    account.disabled = true;
+    continueButton.disabled = true;
+    retryRecipients.hidden = false;
+    showAccountState('No pudimos cargar las cuentas. Intenta nuevamente.', 'error');
+  }
+}
 
-    const datosDestino = snapshotDestino.val();
-    const nombreRegistrado = `${datosDestino.nombres} ${datosDestino.apellidos}`.toLowerCase();
+value.addEventListener('input', () => { value.value = value.value.replace(/\D/g, ''); });
+account.addEventListener('change', () => showMessage());
+retryRecipients.addEventListener('click', loadRecipients);
+cancelButton.addEventListener('click', closeModal);
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal(); trapFocus(modal, event); });
 
-    // Si el nombre ingresado no coincide con un nombre registrado en la base de datos
-    if (nombreIngresado !== nombreRegistrado) {
-      alert("El nombre y apellido no coinciden con la cuenta.");
-      return;
-    }
-
-    // Evitar transferencias a uno mismo
-    if (numeroCuenta === usuarioActivo.numeroCuenta.toString()) {
-      alert("No puedes hacer una consignación a tu propia cuenta.");
-      return;
-    }
-
-    // Validar saldo del usuario activo
-    const remitenteRef = ref(db, `usuarios/${usuarioActivo.numeroCuenta}`);
-    const snapshotRemitente = await get(remitenteRef);
-
-    if (!snapshotRemitente.exists()) {
-      alert("No se pudo verificar tu cuenta. Intenta iniciar sesión de nuevo.");
-      return;
-    }
-
-    const datosRemitente = snapshotRemitente.val();
-    
-    // Si la cantidad de dinero ingresada es mayor a la cantidad de dinero con la que uno cuenta en el banco, entonces que la página tire una alerta
-    if (cantidadNumerica > datosRemitente.saldo) {
-      alert("No tienes suficiente saldo para realizar esta consignación.");
-      return;
-    }
-
-    // Realizar la transferencia
-    const nuevoSaldoRemitente = datosRemitente.saldo - cantidadNumerica;
-    const nuevoSaldoDestino = datosDestino.saldo + cantidadNumerica;
-    
-
-    // Actualizar ambos saldos en Firebase
-    await update(ref(db, `usuarios/${usuarioActivo.numeroCuenta}`), {
-      saldo: nuevoSaldoRemitente
-    });
-
-    await update(ref(db, `usuarios/${numeroCuenta}`), {
-      saldo: nuevoSaldoDestino
-    });
-
-    
-
-// Guardar transacción en Firebase (historial del remitente)
-const transaccionRef = ref(db, `transacciones/${usuarioActivo.numeroCuenta}`);
-await push(transaccionRef, {
-  fecha: new Date().toISOString(),
-  referencia: numeroReferencia, // la misma referencia
-  tipo: "Consignación electrónica",
-  concepto: `Consignación a la cuenta ${numeroCuenta}`,
-  valor: cantidadNumerica
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  showMessage();
+  const numeroCuenta = account.value;
+  const valor = Number(value.value);
+  if (!/^\d{16}$/.test(numeroCuenta) || !Number.isSafeInteger(valor) || valor < 1) {
+    showMessage('Selecciona una cuenta destino e ingresa un valor válido.');
+    return;
+  }
+  setBusy(continueButton, true, 'Consultando…');
+  try {
+    const { recipient } = await api(`/transfers/recipient?numeroCuenta=${encodeURIComponent(numeroCuenta)}`);
+    transferPreview = { numeroCuenta, valor, recipient };
+    document.getElementById('previewRecipient').textContent = recipient.nombreCompleto;
+    document.getElementById('previewAccount').textContent = recipient.numeroCuenta;
+    document.getElementById('previewAmount').textContent = formatMoney(valor);
+    modal.hidden = false;
+    commitButton.focus();
+  } catch (error) { showMessage(error.message); }
+  finally { setBusy(continueButton, false); }
 });
-    alert(`Consignación exitosa de $${cantidadNumerica.toLocaleString()} a ${datosDestino.nombres} ${datosDestino.apellidos}.`);
 
-    // Guardar datos de la transacción y permiso antes de redirigir
-localStorage.setItem('datosConsignacion', JSON.stringify({
-  fecha: new Date().toLocaleString(),
-  referencia: numeroReferencia, // usamos la misma
-  valor: cantidadNumerica
-}));
-
-localStorage.setItem('permisoConsignacion', 'true');
-
-// Redirigir luego de guardar los datos
-setTimeout(() => {
-  window.location.href = "/screens/completedConsign.html";
-}, 300); // pequeño delay por seguridad
-    
-    setTimeout(() => {
-   window.location.href = "/screens/completedConsign.html";
-}, 1000); // 1 segundo
-
-    // Puedes resetear el form si quieres
-    cuentaInput.value = "";
-    nombreInput.value = "";
-    cantidadInput.value = "";
-
+commitButton.addEventListener('click', async () => {
+  if (!transferPreview || submitting) return;
+  submitting = true;
+  setBusy(commitButton, true, 'Consignando…');
+  cancelButton.disabled = true;
+  setMessage(modalMessage, '');
+  try {
+    const { transaction } = await api('/transactions/transfer', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': newIdempotencyKey() },
+      body: JSON.stringify({ numeroCuenta: transferPreview.numeroCuenta, valor: transferPreview.valor }),
+    });
+    sessionStorage.setItem('datosConsignacion', JSON.stringify({
+      fecha: new Date(transaction.fecha).toLocaleString('es-CO'), referencia: transaction.referencia,
+      valor: transaction.valor, destinatario: transaction.destinatario, cuentaDestino: transaction.cuentaDestino,
+    }));
+    sessionStorage.setItem('permisoConsignacion', 'true');
+    window.location.href = '/screens/completedConsign.html';
   } catch (error) {
-    console.error("Error durante la consignación:", error);
-    alert("Ocurrió un error al procesar la consignación.");
+    setMessage(modalMessage, error.message);
+    submitting = false;
+    setBusy(commitButton, false);
+    cancelButton.disabled = false;
   }
 });
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await currentUser();
+    await loadRecipients();
+  } catch { return; }
+  finally { setRegionBusy(form, false); }
 });

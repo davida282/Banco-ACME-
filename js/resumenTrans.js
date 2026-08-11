@@ -1,77 +1,68 @@
-// Se importa el firebase a resumenTrans.js
+import { api, currentUser, formatDate, formatMoney } from './api.js';
+import { setRegionBusy } from './ui.js';
 
-import { db } from './firebaseConfig.js';
-import { get, ref } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+const table = document.getElementById('tabla-transacciones');
+const summary = document.getElementById('movementSummary');
+const previousButton = document.getElementById('previousPage');
+const nextButton = document.getElementById('nextPage');
+const pageIndicator = document.getElementById('pageIndicator');
+const tableRegion = document.querySelector('.tabla-contenedor');
+let currentPage = 1;
 
-// Espera a que el DOM esté completamente cargado antes de ejecutar el código
-window.addEventListener('DOMContentLoaded', async () => {
+function emptyRow(text) {
+  const row = table.insertRow();
+  const cell = row.insertCell();
+  cell.colSpan = 5;
+  cell.textContent = text;
+}
 
-  // Se obtienen las constantes desde las ID propuestas en el HTML
-  const tablaTransacciones = document.getElementById('tabla-transacciones');
-  const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo'));
+function transactionRow(tx) {
+  const row = table.insertRow();
+  [formatDate(tx.fecha), tx.referencia, tx.tipo, tx.concepto, formatMoney(tx.valor)].forEach((value) => {
+    const cell = row.insertCell();
+    cell.textContent = String(value ?? '');
+  });
+}
 
-  // Si el usuario no se encuentra en el Local Storage como usuario activo, la página dice con una alerta que no ha iniciado sesión y lo redirije a login
-  if (!usuarioActivo) {
-    alert("No has iniciado sesión.");
-    window.location.href = '/html/login.html';
-    return;
-  }
-
-  // Se inicia el bloque de código que va a manejar los posibles errores que se van presentando
+async function loadPage(page) {
+  previousButton.disabled = true;
+  nextButton.disabled = true;
+  table.replaceChildren();
+  emptyRow('Cargando movimientos…');
+  setRegionBusy(tableRegion, true);
   try {
-    const transaccionesRef = ref(db, `transacciones/${usuarioActivo.id}`);
-    const snapshot = await get(transaccionesRef);
+    const { transactions, pagination } = await api(`/transactions?page=${page}`);
+    currentPage = pagination.page;
+    table.replaceChildren();
+    if (!transactions.length) emptyRow('No se encontraron transacciones recientes.');
+    else transactions.forEach(transactionRow);
 
-    if (snapshot.exists()) {
-      const transaccionesObj = snapshot.val();
-      const transacciones = Object.values(transaccionesObj);
-
-      // Ordenar por fecha descendente (más recientes primero)
-      transacciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-      // Tomar solo las últimas 10
-      const ultimas10 = transacciones.slice(0, 10);
-
-      ultimas10.forEach(tx => {
-        const fila = document.createElement('tr');
-
-        const fecha = new Date(tx.fecha).toLocaleDateString('es-CO', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-
-        fila.innerHTML = `
-          <td>${fecha}</td>
-          <td>${tx.referencia || 'N/A'}</td>
-          <td>${tx.tipo || 'N/A'}</td>
-          <td>${tx.concepto || 'Sin descripción'}</td>
-          <td>$ ${Number(tx.valor).toLocaleString('es-CO')}</td>
-        `;
-
-        tablaTransacciones.appendChild(fila);
-      });
-
-    } else {
-      const fila = document.createElement('tr');
-      fila.innerHTML = `<td colspan="5">No se encontraron transacciones recientes.</td>`;
-      tablaTransacciones.appendChild(fila);
-    }
-
+    const first = pagination.total ? ((pagination.page - 1) * pagination.pageSize) + 1 : 0;
+    const last = Math.min(pagination.page * pagination.pageSize, pagination.total);
+    summary.textContent = pagination.total
+      ? `Mostrando ${first}–${last} de ${pagination.total} movimientos.`
+      : 'No hay movimientos para mostrar.';
+    pageIndicator.textContent = `Página ${pagination.page} de ${pagination.totalPages}`;
+    previousButton.disabled = !pagination.hasPrevious;
+    nextButton.disabled = !pagination.hasNext;
   } catch (error) {
-    console.error("Error al cargar transacciones:", error);
-    alert("Ocurrió un error al obtener las transacciones.");
+    table.replaceChildren();
+    emptyRow('No fue posible cargar los movimientos.');
+    summary.textContent = error.message;
+    pageIndicator.textContent = 'Página no disponible';
+  } finally {
+    setRegionBusy(tableRegion, false);
   }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await currentUser();
+    await loadPage(1);
+  } catch { window.location.replace('/html/login.html'); }
 });
 
-const volverBtn = document.getElementById('volver');
-// Volver al dashboard
-volverBtn.addEventListener('click', () => {
-  window.location.href = "/html/dashboard.html";
-});
-// Botón de imprimir
-document.getElementById('btnImprimir').addEventListener('click', () => {
-  window.print();
-});
+previousButton.addEventListener('click', () => { if (currentPage > 1) loadPage(currentPage - 1); });
+nextButton.addEventListener('click', () => loadPage(currentPage + 1));
+document.getElementById('volver').addEventListener('click', () => { window.location.href = '/html/dashboard.html'; });
+document.getElementById('btnImprimir').addEventListener('click', () => window.print());

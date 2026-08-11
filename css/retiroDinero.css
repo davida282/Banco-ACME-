@@ -114,3 +114,26 @@ input#cantidad {
 .confirmar:hover {
     background-color: #c2992c;
 }
+
+.transaction-message { min-height: 1.3em; color: #b23b36; font-size: 13px; text-align: center; }
+
+.withdraw-modal[hidden] { display: none; }
+.withdraw-modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(10, 27, 42, .54); backdrop-filter: blur(3px); }
+.withdraw-dialog { width: min(100%, 490px); padding: 34px; border-top: 5px solid #c69332; background: #fbf8f0; color: #10273d; box-shadow: 0 24px 70px rgba(6, 21, 34, .28); animation: withdraw-dialog-drop .24s ease-out both; }
+.modal-eyebrow { margin: 0 0 8px; color: #9b6d18; font: 800 .7rem Manrope, sans-serif; letter-spacing: .11em; text-transform: uppercase; }
+.withdraw-dialog h2 { margin: 0 0 12px; color: #10273d; font: 700 2rem/1.02 Georgia, 'Times New Roman', serif; letter-spacing: -.04em; }
+.modal-intro { margin: 0 0 22px; color: #61707a; font: 500 .88rem/1.55 Manrope, sans-serif; }
+.withdraw-details { display: grid; gap: 12px; margin: 0; padding: 18px 0; border-top: 1px solid #d5d7cf; border-bottom: 1px solid #d5d7cf; }
+.withdraw-details div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+.withdraw-details dt { color: #61707a; font: 700 .68rem Manrope, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.withdraw-details dd { margin: 0; color: #10273d; font: 600 .9rem 'Roboto Mono', Consolas, monospace; text-align: right; overflow-wrap: anywhere; }
+.withdraw-details .balance-after { padding-top: 12px; border-top: 1px dashed #d5d7cf; }
+.withdraw-details .balance-after dd { color: #23764d; font-weight: 800; }
+.modal-message { min-height: 1.3em; margin: 14px 0 0; color: #b23b36; font-size: .82rem; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.modal-actions button { min-height: 44px; padding: 0 17px; border: 1px solid #9b6d18; border-radius: 3px; color: #fffdf7; background: #c69332; font: 800 .74rem Manrope, sans-serif; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
+.modal-actions .modal-cancel { border-color: #10273d; color: #10273d; background: transparent; }
+.modal-actions button:hover { filter: brightness(.93); }
+.modal-actions button:disabled { opacity: .55; cursor: wait; }
+@keyframes withdraw-dialog-drop { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 520px) { .withdraw-dialog { padding: 28px 22px; } .withdraw-details div { align-items: flex-start; flex-direction: column; gap: 4px; } .withdraw-details dd { text-align: left; } .modal-actions { flex-direction: column-reverse; } .modal-actions button { width: 100%; } }

@@ -1,44 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consignación Electrónica - ACME</title>
-    <link href="/css/consignacionElec.css" rel="stylesheet" type="text/css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consignación electrónica | Banco ACME</title>
+  <link href="/css/consignacionElec.css" rel="stylesheet">
+  <link href="/css/acme-system.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
 </head>
-<body>
-    <div class="container">
-        <div class="titulo">
-            <img src="/imgs/BancoLogo.png" alt="Banco" class="logo">
-            <h1>Consignación Electrónica</h1>
-        </div>
-        <!-- Se pasa un formulario que va a pedir el numero de cuenta y el nombre completo del usuario a el que se va a consignar el dinero -->
-        <form class="formulario">
-            <div class="form-group">
-                <label for="cuenta">Núm de cuenta</label>
-                <input type="text" id="numCuenta" placeholder="Número de cuenta">
-            </div>
+<body class="acme-page transfer-page">
+  <main class="container">
+    <div class="titulo"><img src="/imgs/BancoLogo.png" alt="Banco ACME" class="logo"><h1>Consignación electrónica</h1></div>
+    <form id="transferForm" class="formulario" novalidate aria-busy="true">
+      <div class="form-group recipient-field">
+        <label for="numCuenta">Cuenta destino</label>
+        <select id="numCuenta" required aria-describedby="accountHelp transactionMessage" disabled>
+          <option value="">Cargando cuentas activas…</option>
+        </select>
+        <p id="accountHelp" class="field-help" aria-live="polite">Selecciona el nombre; el número de cuenta aparece a su lado.</p>
+        <button id="retryRecipients" class="retry-recipients" type="button" hidden>Volver a cargar cuentas</button>
+      </div>
+      <div class="form-group amount-field"><label for="cantidad">Valor a consignar (COP)</label><input type="text" id="cantidad" inputmode="numeric" autocomplete="off" placeholder="Valor en pesos colombianos" required aria-describedby="transactionMessage"><p class="field-help field-help-placeholder" aria-hidden="true">&nbsp;</p></div>
+      <div class="botones"><a href="dashboard.html" class="volver">Volver</a><button type="submit" class="confirmar" id="confirmarBtn">Continuar</button></div>
+      <p id="transactionMessage" class="transaction-message" role="alert" aria-live="polite"></p>
+    </form>
+  </main>
 
-            <div class="form-group">
-                <label for="usuario">Usuario</label>
-                <input type="text" id="usuario" placeholder="Nombres y apellidos de usuario">
-            </div>
-            <!-- Se pide la cantidad de dinero a consignar -->
-            <div class="form-group">
-                <label for="cantidad">Cantidad</label>
-                <input type="text" id="cantidad" placeholder="$ Valor a Consignar">
-            </div>
-            <!-- Se incluyen los botones para volver a el dashboard y para confirmar consignación -->
-            <div class="botones">
-                <a href="dashboard.html" class="volver">Volver</a>
-                <button type="submit" class="confirmar" id="confirmarBtn">CONFIRMAR</button>
-            </div>
-        </form>
-    </div>
-    <script type="module" src="/js/consignacionElec.js"></script>
+  <div id="transferModal" class="transfer-modal" hidden>
+    <section class="transfer-dialog" role="dialog" aria-modal="true" aria-labelledby="transferModalTitle">
+      <p class="modal-eyebrow">Confirmación de consignación</p>
+      <h2 id="transferModalTitle">Revisa antes de enviar.</h2>
+      <dl class="transfer-details">
+        <div><dt>Destinatario</dt><dd id="previewRecipient">—</dd></div>
+        <div><dt>Cuenta destino</dt><dd id="previewAccount">—</dd></div>
+        <div><dt>Valor a consignar</dt><dd id="previewAmount">—</dd></div>
+      </dl>
+      <p id="modalMessage" class="modal-message" role="alert" aria-live="polite"></p>
+      <div class="modal-actions"><button id="cancelTransfer" class="modal-cancel" type="button">Cancelar</button><button id="commitTransfer" type="button">Consignar</button></div>
+    </section>
+  </div>
+  <script type="module" src="/js/consignacionElec.js"></script>
 </body>
 </html>
