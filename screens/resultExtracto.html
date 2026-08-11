@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracto Resumen</title>
+    <link href="/css/resultExtract.css" rel="stylesheet" type="text/css">
+    <link href="/css/acme-system.css" rel="stylesheet" type="text/css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+</head>
+<body class="acme-page statement-page">
+    <main class="container">
+    <div class="logo">
+      <img src="/imgs/BancoLogo.png" class="bancologo" alt="Logo Banco ACME">
+      <span class="acme">BANCO ACME</span>
+    </div>
+
+    <h2>Extracto Bancario</h2>
+    <div class="tabla-contenedor">
+      <table>
+        <caption class="sr-only">Movimientos del extracto bancario seleccionado</caption>
+        <thead>
+          <tr>
+            <th scope="col">Fecha</th>
+            <th scope="col">Referencia</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Valor</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-transacciones">
+          <!-- Aquí se insertarán las transacciones desde JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" aria-label="Paginación del extracto">
+      <p id="movementSummary" class="pagination-summary" aria-live="polite">Cargando movimientos…</p>
+      <div class="pagination-actions">
+        <button id="previousPage" type="button">Anterior</button>
+        <span id="pageIndicator" class="page-indicator" aria-live="polite">Página 1</span>
+        <button id="nextPage" type="button">Siguiente</button>
+      </div>
+    </div>
+
+    <button id="btnImprimir" type="button">Imprimir</button>
+    <button type="button" class="volver" id="volver">Volver al inicio</button>
+  </main>
+    <script type="module" src="/js/resultExtract.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Extracto Bancario - ACME</title>
+  <link href="/css/extractoBancario.css" rel="stylesheet" type="text/css"/>
+  <link href="/css/acme-system.css" rel="stylesheet" type="text/css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Actor&family=Afacad:ital,wght@0,400..700;1,400..700&family=Allerta&family=Alumni+Sans+SC:ital,wght@0,100..900;1,100..900&family=Fredoka:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png"/>
+</head>
+<body class="acme-page">
+  <main class="container">
+    <div class="titulo">
+      <img src="/imgs/BancoLogo.png" alt="Banco" class="logo" />
+      <h1>Extracto Bancario</h1>
+    </div>
+    <!-- Se crea el formulario que va a autocompletar el número de cuenta y el usuario que está en sesión -->
+    <form id="statementForm" class="formulario" novalidate>
+      <div class="form-group">
+        <label for="numCuenta">Núm. de cuenta</label>
+        <input type="text" id="numCuenta" disabled />
+      </div>
+
+      <div class="form-group">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" disabled />
+      </div>
+      <!-- Se piden el año y el mes para generar el extracto bancario -->
+      <div class="form-group">
+        <label for="anio">Año</label>
+        <input type="number" id="anio" min="2025" max="2099" step="1" placeholder="Ej.: 2025" required aria-describedby="statementMessage" />
+      </div>
+
+      <div class="form-group">
+        <label for="mes">Mes</label>
+        <select id="mes" required aria-describedby="statementMessage">
+          <option value="">Selecciona un mes</option>
+          <option value="01">Enero</option>
+          <option value="02">Febrero</option>
+          <option value="03">Marzo</option>
+          <option value="04">Abril</option>
+          <option value="05">Mayo</option>
+          <option value="06">Junio</option>
+          <option value="07">Julio</option>
+          <option value="08">Agosto</option>
+          <option value="09">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+      </div>
+      <!-- Se incluyen los botones de volver y confirmar -->
+      <div class="botones">
+        <a href="dashboard.html" class="volver">Volver</a>
+        <button type="submit" class="confirmar" id="confirmarBtn">Generar extracto</button>
+      </div>
+      <p id="statementMessage" class="transaction-message" role="alert" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script type="module" src="/js/extractoBancario.js"></script>
+</body>
+</html>

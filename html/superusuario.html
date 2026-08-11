@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centro de control · Banco ACME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/superusuario.css">
+  <link rel="stylesheet" href="/css/acme-system.css">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+</head>
+<body>
+  <header class="admin-header">
+    <a href="/html/dashboard.html" class="brand" aria-label="Volver al inicio de Banco ACME">
+      <img src="/imgs/BancoLogo.png" alt="">
+      <span>Banco ACME</span>
+    </a>
+    <a class="back-link" href="/html/dashboard.html">Volver al inicio</a>
+  </header>
+
+  <main id="adminTop" class="admin-shell" aria-busy="true">
+    <section class="admin-hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Administración protegida</p>
+        <h1 id="page-title">Centro de control de cuentas.</h1>
+        <p class="hero-copy">Consulta usuarios, registra ajustes de saldo y desactiva cuentas. Cada cambio queda guardado en la auditoría administrativa.</p>
+      </div>
+      <div class="admin-identity" aria-label="Sesión administrativa">
+        <span>Sesión activa</span>
+        <strong id="adminIdentity">Superusuario</strong>
+      </div>
+    </section>
+
+    <section class="summary-grid" aria-label="Resumen de cuentas">
+      <article class="summary-card">
+        <span>Total de usuarios</span>
+        <strong id="totalUsers">—</strong>
+      </article>
+      <article class="summary-card summary-card--active">
+        <span>Cuentas activas</span>
+        <strong id="activeUsers">—</strong>
+      </article>
+      <article class="summary-card summary-card--inactive">
+        <span>Cuentas inactivas</span>
+        <strong id="inactiveUsers">—</strong>
+      </article>
+      <article class="summary-card summary-card--balance">
+        <span>Saldo administrado</span>
+        <strong id="managedBalance">—</strong>
+      </article>
+    </section>
+
+    <section id="accountWorkspace" class="workspace" aria-labelledby="workspace-title">
+      <div class="selection-panel">
+        <p class="eyebrow">Cuenta seleccionada</p>
+        <h2 id="workspace-title" tabindex="-1">Elige un usuario</h2>
+        <p id="selectionHelp" class="selection-help">Usa “Gestionar” en la tabla para cargar aquí su información.</p>
+
+        <dl class="account-details">
+          <div><dt>Número de cuenta</dt><dd id="selectedAccountNumber">—</dd></div>
+          <div><dt>Correo</dt><dd id="selectedEmail">—</dd></div>
+          <div><dt>Saldo actual</dt><dd id="selectedBalance">—</dd></div>
+          <div><dt>Estado</dt><dd><span id="selectedStatus" class="status status--neutral">Sin seleccionar</span></dd></div>
+        </dl>
+
+        <div class="danger-zone">
+          <div>
+            <h3 id="statusActionTitle">Desactivar cuenta</h3>
+            <p id="statusActionDescription">Impide nuevos inicios de sesión y cierra las sesiones que estén abiertas. La cuenta y su historial se conservan.</p>
+          </div>
+          <button id="deactivateAccount" type="button" class="danger-button" disabled>Desactivar cuenta</button>
+        </div>
+      </div>
+
+      <div class="adjustment-panel">
+        <p class="eyebrow">Operación auditada</p>
+        <h2>Ajustar saldo</h2>
+        <p class="panel-copy">Ingresa valores enteros en COP: positivos para abonar y negativos para debitar. El saldo nunca podrá quedar por debajo de cero.</p>
+
+        <form id="adjustmentForm" class="adjustment-form" novalidate>
+          <label for="selectedUser">Cuenta
+            <input id="selectedUser" readonly aria-readonly="true" placeholder="Selecciona un usuario en la tabla">
+          </label>
+          <label for="adjustmentValue">Valor del ajuste
+            <input id="adjustmentValue" type="number" step="1" required placeholder="Ej. 50000 o -50000" disabled>
+            <span class="field-help">Positivo para abono · negativo para débito</span>
+          </label>
+          <label for="adjustmentReason">Motivo del ajuste
+            <input id="adjustmentReason" minlength="5" maxlength="255" required placeholder="Ej. Corrección de saldo autorizada" disabled>
+          </label>
+          <button id="submitAdjustment" type="submit" disabled>Registrar ajuste</button>
+        </form>
+      </div>
+
+      <p id="adminMessage" class="admin-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="data-section" aria-labelledby="accounts-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Directorio</p>
+          <h2 id="accounts-title">Usuarios registrados</h2>
+        </div>
+        <button id="reloadUsers" class="quiet-button" type="button">Actualizar datos</button>
+      </div>
+
+      <div class="filters" role="search" aria-label="Filtrar usuarios">
+        <label for="userSearch">Buscar usuario
+          <input id="userSearch" type="search" autocomplete="off" placeholder="Nombre, correo, documento o cuenta">
+        </label>
+        <label for="statusFilter">Estado
+          <select id="statusFilter">
+            <option value="todos">Todos</option>
+            <option value="activa">Activas</option>
+            <option value="desactivada">Inactivas</option>
+          </select>
+        </label>
+        <p id="resultsCount" class="results-count" aria-live="polite"></p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only">Listado de usuarios registrados en Banco ACME</caption>
+          <thead><tr><th scope="col">Persona</th><th scope="col">Cuenta</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Gestión</th></tr></thead>
+          <tbody id="usersTable"><tr><td colspan="5" class="empty-cell">Cargando usuarios…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="admin-pagination" aria-label="Paginación de la actividad administrativa">
+        <p id="auditSummary" aria-live="polite">Cargando actividad…</p>
+        <div>
+          <button id="previousAuditPage" type="button" class="quiet-button">Anterior</button>
+          <span id="auditPageIndicator" aria-live="polite">Página 1</span>
+          <button id="nextAuditPage" type="button" class="quiet-button">Siguiente</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="data-section" aria-labelledby="audit-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Trazabilidad</p>
+          <h2 id="audit-title">Actividad administrativa reciente</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only">Registro de acciones realizadas desde el panel administrativo</caption>
+          <thead><tr><th scope="col">Fecha</th><th scope="col">Acción</th><th scope="col">Responsable</th><th scope="col">Cuenta afectada</th><th scope="col">Detalle</th></tr></thead>
+          <tbody id="auditTable"><tr><td colspan="5" class="empty-cell">Cargando actividad…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="deactivationModal" class="modal" hidden>
+    <div class="modal-backdrop" data-modal-cancel></div>
+    <section id="statusActionModalCard" class="modal-card" role="dialog" aria-modal="true" aria-labelledby="deactivation-title" aria-describedby="deactivation-description">
+      <p id="modalEyebrow" class="eyebrow">Confirmación administrativa</p>
+      <h2 id="deactivation-title">¿Desactivar esta cuenta?</h2>
+      <p id="deactivation-description">El usuario no podrá iniciar sesión y cualquier sesión abierta será cerrada.</p>
+      <div class="modal-account">
+        <span id="modalUserName">—</span>
+        <strong id="modalAccountNumber">—</strong>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelDeactivation" type="button" class="quiet-button">Cancelar</button>
+        <button id="confirmDeactivation" type="button" class="danger-button">Sí, desactivar cuenta</button>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="/js/superusuario.js"></script>
+</body>
+</html>

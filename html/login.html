@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio de sesión - ACME</title>
+  <link href="/css/login.css" rel="stylesheet">
+  <link href="/css/acme-system.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+</head>
+<body>
+  <main class="container">
+    <div class="logo"><div><span>banco</span><br><span class="acme">ACME</span></div><img src="/imgs/BancoLogo.png" alt="Logo de Banco ACME" class="bancologo"></div>
+    <h1>Inicio de sesión</h1>
+    <form id="loginForm" novalidate>
+      <div class="input-group"><label class="sr-only" for="email">Correo electrónico</label><input type="email" id="email" placeholder="Correo electrónico" autocomplete="username" required aria-describedby="formMessage"></div>
+      <div class="input-group"><label class="sr-only" for="contrasena">Contraseña</label><input type="password" id="contrasena" placeholder="Contraseña" autocomplete="current-password" minlength="8" maxlength="72" required aria-describedby="formMessage"></div>
+      <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
+      <button type="submit">Iniciar sesión</button>
+      <div class="extras">
+        <p class="forgot"><a href="/html/recuperacionContra.html">¿Olvidaste tu contraseña?</a></p>
+        <p class="new">¿Usuario nuevo? <a href="/html/registro.html">Regístrate aquí</a></p>
+      </div>
+    </form>
+  </main>
+  <script type="module" src="/js/autenticación.js"></script>
+</body>
+</html>

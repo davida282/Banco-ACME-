@@ -1,0 +1,86 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #1e222d;
+  color: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 500px;
+  width: 100%;
+  background-color: #1e222d;
+  text-align: left;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.logo span {
+  color: #f5d142;
+  font-weight: 100;
+  font-size: 24px;
+  font-family: 'Actor', sans-serif;
+  
+ 
+}
+
+.logo .acme {
+  color: white;
+  font-size: 27px;
+  letter-spacing: 4px;
+}
+
+.bancologo {
+  height: 11vh;
+  margin: -20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  color: black;
+  font-size: 14px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  margin-top: 20px;
+  background-color: #fdd842b8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+}
+
+button:hover {
+  background-color: #b99020;
+}
+
+@media print {
+  #imprimir, #volver {
+    display: none;
+  }
+}

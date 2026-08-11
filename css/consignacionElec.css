@@ -1,0 +1,211 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Manrope', sans-serif;
+}
+
+body {
+    background-color: #121827;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 500px;
+    background-color: transparent;
+}
+
+.titulo {
+    text-align: left;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 60px;
+    margin-right: 10px;
+    margin-bottom: 0;
+}
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 100;
+    font-family: 'Actor', sans-serif;
+}
+
+.formulario {
+    display: flex;
+    flex-direction: column; 
+    gap: 20px;
+    
+}
+
+.form-group {
+    display: flex;
+    align-items: stretch;
+    gap: 15px; 
+    
+}
+
+.form-group label {
+    flex-shrink: 0; 
+    width: auto;
+    text-align: left;
+    font-weight: 100;
+    font-size: 1rem;
+    font-family: 'Allerta', sans-serif;
+}
+
+.form-group input,
+.form-group select { 
+    flex-grow: 1; 
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #273656;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: 'Afacad', sans-serif;
+}
+
+.form-group select {
+    appearance: auto;
+    cursor: pointer;
+}
+
+.recipient-field .field-help {
+    margin: -2px 0 0;
+    color: #61707a;
+    font-size: .76rem;
+    line-height: 1.4;
+}
+
+.recipient-field .field-help[data-state="error"] {
+    color: #b23b36;
+}
+
+.acme-page .recipient-field .retry-recipients {
+    justify-self: start;
+    min-height: auto;
+    padding: 0;
+    border: 0;
+    color: #9b6d18;
+    background: transparent;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-decoration: underline;
+    text-transform: none;
+}
+
+.acme-page .recipient-field .retry-recipients[hidden] {
+    display: none;
+}
+
+.acme-page .recipient-field .retry-recipients:hover {
+    color: #10273d;
+    background: transparent;
+}
+
+body.acme-page.transfer-page {
+    align-items: center;
+    padding-block: clamp(24px, 5vh, 48px);
+}
+
+.acme-page.transfer-page .container {
+    padding: clamp(32px, 4vw, 48px);
+}
+
+.acme-page.transfer-page .titulo {
+    margin-bottom: 28px;
+}
+
+.acme-page.transfer-page .form-group {
+    grid-template-rows: auto 60px 20px;
+    align-content: start;
+}
+
+.acme-page.transfer-page .form-group input,
+.acme-page.transfer-page .form-group select {
+    height: 60px;
+    min-height: 60px;
+}
+
+.acme-page.transfer-page .field-help {
+    min-height: 20px;
+}
+
+.acme-page.transfer-page .field-help-placeholder {
+    visibility: hidden;
+}
+
+.recipient-field select:disabled {
+    cursor: wait;
+}
+
+
+input::placeholder {
+    color: #aeb5c3;
+}
+
+input#cantidad {
+    background-color: #2d2f34;
+}
+
+.botones {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.volver {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 100;
+}
+
+.confirmar {
+    padding: 8px 16px;
+    background-color: #fdd842a8;
+    color: #ffffff;
+    font-weight: 400;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Manrope', sans-serif;
+    margin-right: 142px;
+}
+
+.confirmar:hover {
+    background-color: #c2992c;
+}
+
+.transaction-message { min-height: 1.3em; color: #ffaaa2; font-size: 13px; text-align: center; }
+
+.transfer-modal[hidden] { display: none; }
+.transfer-modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(10, 27, 42, .54); backdrop-filter: blur(3px); }
+.transfer-dialog { position: relative; width: min(100%, 470px); padding: 34px; border-top: 5px solid #c69332; background: #fbf8f0; color: #10273d; box-shadow: 0 24px 70px rgba(6, 21, 34, .28); animation: transfer-dialog-drop .24s ease-out both; }
+.modal-eyebrow { margin: 0 0 8px; color: #9b6d18; font: 800 .7rem Manrope, sans-serif; letter-spacing: .11em; text-transform: uppercase; }
+.transfer-dialog h2 { margin: 0 32px 24px 0; font: 700 2rem/1.02 'Playfair Display', Georgia, serif; letter-spacing: -.04em; }
+.transfer-details { display: grid; gap: 12px; margin: 0; padding: 18px 0; border-top: 1px solid #d5d7cf; border-bottom: 1px solid #d5d7cf; }
+.transfer-details div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+.transfer-details dt { color: #61707a; font: 700 .68rem Manrope, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.transfer-details dd { margin: 0; color: #10273d; font: 600 .9rem 'Roboto Mono', Consolas, monospace; text-align: right; overflow-wrap: anywhere; }
+.modal-message { min-height: 1.3em; margin: 14px 0 0; color: #b23b36; font-size: .82rem; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.modal-actions button { min-height: 44px; padding: 0 17px; border: 1px solid #9b6d18; border-radius: 3px; color: #fffdf7; background: #c69332; font: 800 .74rem Manrope, sans-serif; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
+.modal-actions .modal-cancel { border-color: #10273d; color: #10273d; background: transparent; }
+.modal-actions button:hover { filter: brightness(.93); }
+.modal-actions button:disabled { opacity: .55; cursor: wait; }
+@keyframes transfer-dialog-drop { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 520px) { .transfer-dialog { padding: 28px 22px; }.transfer-details div { align-items: flex-start; flex-direction: column; gap: 4px; }.transfer-details dd { text-align: left; }.modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; } }

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retirar dinero | Banco ACME</title>
+  <link href="/css/retiroDinero.css" rel="stylesheet">
+  <link href="/css/acme-system.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+</head>
+<body class="acme-page">
+  <main class="container">
+    <div class="titulo">
+      <img src="/imgs/BancoLogo.png" alt="Banco ACME" class="logo">
+      <h1>Retirar dinero</h1>
+    </div>
+    <form id="withdrawForm" class="formulario" novalidate aria-busy="true">
+      <div class="form-group">
+        <label for="numCuenta">Núm. de cuenta</label>
+        <input type="text" id="numCuenta" disabled>
+      </div>
+      <div class="form-group">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" disabled>
+      </div>
+      <div class="form-group">
+        <label for="cantidad">Valor a retirar (COP)</label>
+        <input type="text" id="cantidad" inputmode="numeric" autocomplete="off" placeholder="Valor en pesos colombianos" required aria-describedby="transactionMessage" disabled>
+      </div>
+      <div class="botones">
+        <a href="dashboard.html" class="volver">Volver</a>
+        <button type="submit" class="confirmar" id="confirmarBtn" disabled>Continuar</button>
+      </div>
+      <p id="transactionMessage" class="transaction-message" role="alert" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <div id="withdrawModal" class="withdraw-modal" hidden>
+    <section class="withdraw-dialog" role="dialog" aria-modal="true" aria-labelledby="withdrawModalTitle" aria-describedby="withdrawModalDescription">
+      <p class="modal-eyebrow">Confirmación de retiro</p>
+      <h2 id="withdrawModalTitle">Revisa antes de retirar.</h2>
+      <p id="withdrawModalDescription" class="modal-intro">Confirma los datos para registrar el retiro desde tu cuenta.</p>
+      <dl class="withdraw-details">
+        <div><dt>Cuenta</dt><dd id="previewAccount">—</dd></div>
+        <div><dt>Titular</dt><dd id="previewUser">—</dd></div>
+        <div><dt>Valor a retirar</dt><dd id="previewAmount">—</dd></div>
+        <div><dt>Saldo disponible</dt><dd id="previewBalance">—</dd></div>
+        <div class="balance-after"><dt>Saldo después del retiro</dt><dd id="previewRemaining">—</dd></div>
+      </dl>
+      <p id="modalMessage" class="modal-message" role="alert" aria-live="polite"></p>
+      <div class="modal-actions">
+        <button id="cancelWithdraw" class="modal-cancel" type="button">Cancelar</button>
+        <button id="commitWithdraw" type="button">Confirmar retiro</button>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="/js/retiroDinero.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "banco-acme",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node --watch server/app.js",
+    "migrate": "node database/runMigrations.js",
+    "migrate:firebase": "node database/importFirebase.js",
+    "verify:migration": "node database/verifyMigration.js",
+    "db:inspect": "node database/inspectDatabase.js",
+    "db:backup": "node database/backupDatabase.js",
+    "db:verify-backup": "node database/verifyBackup.js",
+    "db:migrate-neon": "node database/migrateToNeon.js",
+    "test": "node --test --test-concurrency=1"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3"
+  }
+}

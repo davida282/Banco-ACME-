@@ -1,0 +1,45 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
+body { background-color: #121827; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { width: 90%; max-width: 500px; background-color: transparent; }
+.titulo { display: flex; align-items: center; margin-bottom: 40px; }
+.logo { width: 60px; margin-right: 10px; }
+h1 { font-size: 1.8rem; font-weight: 100; font-family: 'Actor', sans-serif; }
+.formulario { display: flex; flex-direction: column; gap: 20px; }
+.form-group { display: flex; align-items: center; gap: 15px; }
+.form-group label { flex-shrink: 0; width: 120px; text-align: center; font-weight: 100; font-size: 1rem; font-family: 'Allerta', sans-serif; }
+.form-group input, .form-group select { flex-grow: 1; padding: 5px 15px; border: none; border-radius: 4px; background-color: #273656; color: #fff; font-size: .95rem; font-family: 'Afacad', sans-serif; }
+input::placeholder, select { color: #aeb5c3; }
+input#cantidad, input#referencia { background-color: #2d2f34; }
+.botones { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+.volver { color: #fff; text-decoration: none; font-size: 1rem; font-family: 'Manrope', sans-serif; font-weight: 100; }
+.confirmar { padding: 8px 16px; background-color: #fdd842a8; color: #fff; font-weight: 400; border: none; border-radius: 12px; cursor: pointer; transition: background-color .3s; font-family: 'Manrope', sans-serif; margin-right: 142px; }
+.confirmar:hover { background-color: #c2992c; }
+.transaction-message { min-height: 1.3em; color: #b23b36; font-size: 13px; text-align: center; }
+.simulation-note { grid-column: 1 / -1; margin: -12px 0 22px; padding: 10px 13px; border-left: 3px solid #c69332; color: #61707a; background: #f5f1e6; font-size: .82rem; line-height: 1.45; }
+.field-with-message { align-items: start; position: relative; }
+.field-with-message .field-help, .field-with-message .field-message { margin: -7px 0 0; font-size: .76rem; line-height: 1.35; }
+.field-with-message .field-help { color: #61707a; }
+.field-with-message .field-message { min-height: 1.1em; color: #b23b36; }
+.field-message[data-state="pendiente"] { color: #23764d; }
+.field-message[data-state="pagada"], .field-message[data-state="vencida"], .field-message[data-state="no_encontrada"] { color: #9b6d18; }
+
+.service-modal[hidden] { display: none; }
+.service-modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(10, 27, 42, .54); backdrop-filter: blur(3px); }
+.service-dialog { width: min(100%, 500px); padding: 34px; border-top: 5px solid #c69332; background: #fbf8f0; color: #10273d; box-shadow: 0 24px 70px rgba(6, 21, 34, .28); animation: service-dialog-drop .24s ease-out both; }
+.modal-eyebrow { margin: 0 0 8px; color: #9b6d18; font: 800 .7rem Manrope, sans-serif; letter-spacing: .11em; text-transform: uppercase; }
+.service-dialog h2 { margin: 0 0 12px; color: #10273d; font: 700 2rem/1.02 Georgia, 'Times New Roman', serif; letter-spacing: -.04em; }
+.modal-intro { margin: 0 0 22px; color: #61707a; font: 500 .88rem/1.55 Manrope, sans-serif; }
+.service-details { display: grid; gap: 12px; margin: 0; padding: 18px 0; border-top: 1px solid #d5d7cf; border-bottom: 1px solid #d5d7cf; }
+.service-details div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+.service-details dt { color: #61707a; font: 700 .68rem Manrope, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.service-details dd { margin: 0; color: #10273d; font: 600 .9rem 'Roboto Mono', Consolas, monospace; text-align: right; overflow-wrap: anywhere; }
+.service-details .balance-after { padding-top: 12px; border-top: 1px dashed #d5d7cf; }
+.service-details .balance-after dd { color: #23764d; font-weight: 800; }
+.modal-message { min-height: 1.3em; margin: 14px 0 0; color: #b23b36; font-size: .82rem; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.modal-actions button { min-height: 44px; padding: 0 17px; border: 1px solid #9b6d18; border-radius: 3px; color: #fffdf7; background: #c69332; font: 800 .74rem Manrope, sans-serif; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
+.modal-actions .modal-cancel { border-color: #10273d; color: #10273d; background: transparent; }
+.modal-actions button:hover { filter: brightness(.93); }
+.modal-actions button:disabled { opacity: .55; cursor: wait; }
+@keyframes service-dialog-drop { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 520px) { .service-dialog { padding: 28px 22px; } .service-details div { align-items: flex-start; flex-direction: column; gap: 4px; } .service-details dd { text-align: left; } .modal-actions { flex-direction: column-reverse; } .modal-actions button { width: 100%; } }

@@ -1,0 +1,121 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Manrope', sans-serif;
+}
+
+body {
+    background-color: #121827;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 500px;
+    background-color: transparent;
+}
+
+.titulo {
+    text-align: left;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 60px;
+    margin-right: 10px;
+    margin-bottom: 0;
+}
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 100;
+    font-family: 'Actor', sans-serif;
+}
+
+.formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.form-group label {
+    flex-shrink: 0;
+    width: 120px;
+    text-align: center;
+    font-weight: 100;
+    font-size: 1rem;
+    font-family: 'Allerta', sans-serif;
+}
+
+.form-group input,
+.form-group select {
+    flex-grow: 1;
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #273656;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: 'Afacad', sans-serif;
+}
+
+
+input::placeholder {
+    color: #aeb5c3;
+}
+
+
+input#cantidad {
+    background-color: #2d2f34;
+}
+
+
+.form-group select:invalid {
+    color: #aeb5c3;
+}
+
+
+.botones {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.volver {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 100;
+}
+
+.confirmar {
+    padding: 8px 16px;
+    background-color: #fdd842a8;
+    color: #ffffff;
+    font-weight: 400;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: 'Manrope', sans-serif;
+    margin-right: 142px;
+}
+
+.confirmar:hover {
+    background-color: #c2992c;
+}
