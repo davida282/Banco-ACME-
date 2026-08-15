@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import test, { after, before } from 'node:test';
 import bcrypt from 'bcryptjs';
+import { formatMoney } from '../js/api.js';
 
 process.env.NODE_ENV = 'test';
 
@@ -18,7 +20,7 @@ let temporaryAdminId;
 let temporaryAdminEmail;
 let administrativeTargetId;
 let administrativeTargetEmail;
-let registeredUserId;
+const registeredUserIds = [];
 
 function cookiePairs(response) {
   const values = response.headers.getSetCookie?.() ?? [response.headers.get('set-cookie')].filter(Boolean);
@@ -78,14 +80,12 @@ before(async () => {
 });
 
 after(async () => {
-  const temporaryIds = [temporaryUserId, temporaryRecipientId, temporaryAdminId, administrativeTargetId].filter(Boolean);
+  const temporaryIds = [temporaryUserId, temporaryRecipientId, temporaryAdminId, administrativeTargetId, ...registeredUserIds].filter(Boolean);
   if (temporaryIds.length) {
     await pool.query('DELETE FROM auditoria_administrativa WHERE usuario_afectado_id=ANY($1) OR administrador_id=ANY($1)', [temporaryIds]);
+    await pool.query('DELETE FROM prestamos WHERE usuario_id=ANY($1)', [temporaryIds]);
     await pool.query('DELETE FROM transacciones WHERE usuario_id=ANY($1) OR cuenta_destino_id=ANY($1)', [temporaryIds]);
     await pool.query('DELETE FROM usuarios WHERE id=ANY($1)', [temporaryIds]);
-  }
-  if (registeredUserId) {
-    await pool.query('DELETE FROM usuarios WHERE id=$1', [registeredUserId]);
   }
   await new Promise((resolve) => server.close(resolve));
   await pool.end();
@@ -95,6 +95,23 @@ test('el estado de salud confirma que la aplicación y PostgreSQL están disponi
   const response = await request('/api/health');
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { status: 'ok', database: 'connected' });
+});
+
+test('los valores monetarios se presentan como pesos colombianos con signo y dos decimales', () => {
+  assert.equal(formatMoney(1234.5).replace('\u00a0', ' '), '$ 1.234,50');
+  assert.equal(formatMoney(0).replace('\u00a0', ' '), '$ 0,00');
+});
+
+test('extractos incluye el acceso rápido al mes actual y registro redirige al inicio de sesión', async () => {
+  const [statementHtml, statementScript, registerScript] = await Promise.all([
+    readFile(new URL('../html/extractoBancario.html', import.meta.url), 'utf8'),
+    readFile(new URL('../js/extractoBancario.js', import.meta.url), 'utf8'),
+    readFile(new URL('../js/register.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(statementHtml, /id="currentPeriodBtn"/);
+  assert.match(statementScript, /getFullYear\(\)/);
+  assert.match(statementScript, /getMonth\(\) \+ 1/);
+  assert.match(registerScript, /window\.location\.replace\('\/html\/login\.html\?registro=exitoso'\)/);
 });
 
 test('la automatización de respaldos rechaza peticiones públicas', async () => {
@@ -139,7 +156,7 @@ test('una clave de idempotencia registra un retiro una sola vez', async () => {
   assert.equal(rows[0].movimientos, 1);
 });
 
-test('el registro rechaza una contraseña que no cumple la política', async () => {
+test('el registro solo rechaza contraseñas con menos de ocho caracteres', async () => {
   const csrfResponse = await request('/api/auth/csrf');
   const csrfCookie = cookiePairs(csrfResponse).find((value) => value.startsWith('acme_csrf='));
   assert.ok(csrfCookie);
@@ -149,7 +166,7 @@ test('el registro rechaza una contraseña que no cumple la política', async () 
     headers: { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf },
     body: JSON.stringify({
       tipoDocumento: 'CC', genero: 'No especificado', ciudad: 'Bogotá', documento: '7999999999', telefono: '7999999999',
-      nombres: 'Cliente', apellidos: 'Inseguro', direccion: 'Calle de prueba 123', email: 'inseguro@example.test', contrasena: 'solocontrasena',
+      nombres: 'Cliente', apellidos: 'Inseguro', direccion: 'Calle de prueba 123', email: 'inseguro@example.test', contrasena: 'corta7',
     }),
   });
   assert.equal(response.status, 400);
@@ -177,9 +194,22 @@ test('la consignación consulta el destinatario y no recibe su nombre desde el c
   assert.equal(recipients.some((recipient) => recipient.numeroCuenta === temporaryUserAccount), false);
   assert.equal(recipients.some((recipient) => recipient.nombreCompleto === 'Cuenta Desactivable'), false);
 
-  const recipientResponse = await request(`/api/transfers/recipient?numeroCuenta=${temporaryRecipientAccount}`, { headers: { Cookie: cookies } });
+  const insufficientResponse = await request(
+    `/api/transfers/recipient?numeroCuenta=${temporaryRecipientAccount}&valor=999999999`,
+    { headers: { Cookie: cookies } },
+  );
+  assert.equal(insufficientResponse.status, 400);
+  assert.equal((await insufficientResponse.json()).error, 'Saldo insuficiente');
+
+  const recipientResponse = await request(
+    `/api/transfers/recipient?numeroCuenta=${temporaryRecipientAccount}&valor=1000`,
+    { headers: { Cookie: cookies } },
+  );
   assert.equal(recipientResponse.status, 200);
-  assert.equal((await recipientResponse.json()).recipient.nombreCompleto, 'Destino Prueba');
+  const recipientPayload = await recipientResponse.json();
+  assert.equal(recipientPayload.recipient.nombreCompleto, 'Destino Prueba');
+  assert.equal(recipientPayload.balance.disponible, 490000);
+  assert.equal(recipientPayload.balance.restante, 489000);
 
   const transferResponse = await request('/api/transactions/transfer', {
     method: 'POST',
@@ -277,24 +307,129 @@ test('los movimientos se consultan por páginas de diez registros y conservan el
   assert.equal(invalidPageResponse.status, 400);
 });
 
-test('el registro crea una cuenta segura con un saldo inicial de COP 500.000', async () => {
+test('el registro acepta correo y teléfono repetidos, pero conserva el documento como único', async () => {
   const csrfResponse = await request('/api/auth/csrf');
   const csrfCookie = cookiePairs(csrfResponse).find((value) => value.startsWith('acme_csrf='));
   assert.ok(csrfCookie);
   const csrf = csrfCookie.split('=', 2)[1];
-  const document = String(7_800_000_000 + crypto.randomInt(1_000_000));
-  const response = await request('/api/auth/register', {
+  const firstDocument = String(7_800_000_000 + crypto.randomInt(500_000));
+  const secondDocument = String(7_850_000_000 + crypto.randomInt(500_000));
+  const sharedEmail = `registro.compartido.${firstDocument}@acme.local`;
+  const sharedPhone = String(7_900_000_000 + crypto.randomInt(1_000_000));
+  const commonData = {
+    tipoDocumento: 'CC', genero: 'No especificado', ciudad: 'Bogotá', telefono: sharedPhone,
+    nombres: 'Cliente', apellidos: 'Registrado', direccion: 'Calle de prueba 123', email: sharedEmail,
+  };
+
+  const firstResponse = await request('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ ...commonData, documento: firstDocument, contrasena: 'abcdefgh' }),
+  });
+  assert.equal(firstResponse.status, 201);
+  const firstUser = (await firstResponse.json()).user;
+  registeredUserIds.push(firstUser.id);
+  assert.equal(firstUser.saldo, 500000);
+
+  const secondResponse = await request('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ ...commonData, documento: secondDocument, contrasena: 'ijklmnop' }),
+  });
+  assert.equal(secondResponse.status, 201);
+  const secondUser = (await secondResponse.json()).user;
+  registeredUserIds.push(secondUser.id);
+  assert.equal(secondUser.saldo, 500000);
+
+  const duplicateDocumentResponse = await request('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf },
     body: JSON.stringify({
-      tipoDocumento: 'CC', genero: 'No especificado', ciudad: 'Bogotá', documento: document, telefono: document,
-      nombres: 'Cliente', apellidos: 'Registrado', direccion: 'Calle de prueba 123', email: `registro.${document}@acme.local`, contrasena: 'Registro-Seguro-2026!',
+      ...commonData,
+      documento: firstDocument,
+      telefono: String(Number(sharedPhone) + 1),
+      email: `otro.${firstDocument}@acme.local`,
+      contrasena: '12345678',
     }),
   });
-  assert.equal(response.status, 201);
-  const user = (await response.json()).user;
-  registeredUserId = user.id;
-  assert.equal(user.saldo, 500000);
+  assert.equal(duplicateDocumentResponse.status, 409);
+  assert.match((await duplicateDocumentResponse.json()).error, /documento/i);
+
+  const loginResponse = await request('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ email: sharedEmail, contrasena: 'abcdefgh' }),
+  });
+  assert.equal(loginResponse.status, 200);
+  assert.equal((await loginResponse.json()).user.id, firstUser.id);
+});
+
+test('los préstamos se cotizan, desembolsan una sola vez y aumentan el saldo', async () => {
+  const csrfResponse = await request('/api/auth/csrf');
+  const csrfCookie = cookiePairs(csrfResponse).find((value) => value.startsWith('acme_csrf='));
+  assert.ok(csrfCookie);
+  const csrf = csrfCookie.split('=', 2)[1];
+  const loginResponse = await request('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ email: `test.${await userDocument()}@acme.local`, contrasena: 'Temporal-prueba-2026!' }),
+  });
+  assert.equal(loginResponse.status, 200);
+  const sessionCookie = cookiePairs(loginResponse).find((value) => value.startsWith('acme_session='));
+  const cookies = `${csrfCookie}; ${sessionCookie}`;
+
+  const invalidQuote = await request('/api/loans/quote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookies, 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ monto: 49_999, plazoMeses: 6 }),
+  });
+  assert.equal(invalidQuote.status, 400);
+
+  const quoteResponse = await request('/api/loans/quote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookies, 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ monto: 100_000, plazoMeses: 6 }),
+  });
+  assert.equal(quoteResponse.status, 200);
+  assert.deepEqual((await quoteResponse.json()).quote, {
+    monto: 100000,
+    plazoMeses: 6,
+    tasaMensual: 0.015,
+    intereses: 9000,
+    totalPagar: 109000,
+    cuotaMensual: 18167,
+  });
+
+  const { rows: balanceRows } = await pool.query('SELECT saldo FROM usuarios WHERE id=$1', [temporaryUserId]);
+  const initialBalance = Number(balanceRows[0].saldo);
+  const key = crypto.randomUUID();
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookies, 'X-CSRF-Token': csrf, 'Idempotency-Key': key },
+    body: JSON.stringify({ monto: 100_000, plazoMeses: 6 }),
+  };
+  const firstLoanResponse = await request('/api/loans', requestOptions);
+  const repeatedLoanResponse = await request('/api/loans', requestOptions);
+  assert.equal(firstLoanResponse.status, 201);
+  assert.equal(repeatedLoanResponse.status, 201);
+  const firstLoan = (await firstLoanResponse.json()).loan;
+  const repeatedLoan = (await repeatedLoanResponse.json()).loan;
+  assert.equal(firstLoan.referencia, repeatedLoan.referencia);
+
+  const { rows: resultRows } = await pool.query(
+    `SELECT saldo,
+            (SELECT COUNT(*)::int FROM prestamos WHERE usuario_id=$1 AND referencia=$2) AS prestamos,
+            (SELECT COUNT(*)::int FROM transacciones WHERE usuario_id=$1 AND clave_idempotencia=$3) AS movimientos
+     FROM usuarios WHERE id=$1`,
+    [temporaryUserId, firstLoan.referencia, key],
+  );
+  assert.equal(Number(resultRows[0].saldo), initialBalance + 100000);
+  assert.equal(resultRows[0].prestamos, 1);
+  assert.equal(resultRows[0].movimientos, 1);
+
+  const loansResponse = await request('/api/loans', { headers: { Cookie: cookies } });
+  assert.equal(loansResponse.status, 200);
+  assert.ok((await loansResponse.json()).loans.some((loan) => loan.referencia === firstLoan.referencia));
 });
 
 test('el superusuario desactiva, reactiva cuentas y puede ajustar su propio saldo', async () => {

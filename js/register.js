@@ -19,9 +19,7 @@ function setFieldMessage(id, text = '', valid = false) {
 }
 
 function passwordError(value) {
-  if (value.length < 8 || value.length > 72) return 'Usa entre 8 y 72 caracteres.';
-  if (/\s/.test(value)) return 'No uses espacios en la contraseña.';
-  if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/\d/.test(value) || !/[^A-Za-z0-9]/.test(value)) return 'Incluye mayúscula, minúscula, número y símbolo.';
+  if (value.length < 8) return 'Usa mínimo 8 caracteres.';
   return '';
 }
 
@@ -59,8 +57,9 @@ form.addEventListener('submit', async (event) => {
   setBusy(submitButton, true, 'Creando cuenta…');
   try {
     const { user } = await api('/auth/register', { method: 'POST', body: JSON.stringify(data) });
-    setMessage(message, `Cuenta creada con ${formatMoney(user.saldo)}. Tu número de cuenta es ${user.numeroCuenta}. Ya puedes iniciar sesión.`, 'success');
+    setMessage(message, `Cuenta creada con ${formatMoney(user.saldo)}. Te llevaremos al inicio de sesión.`, 'success');
     form.reset();
+    setTimeout(() => window.location.replace('/html/login.html?registro=exitoso'), 1200);
   } catch (error) { setMessage(message, error.message); }
   finally { setBusy(submitButton, false); }
 });

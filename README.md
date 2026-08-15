@@ -14,19 +14,22 @@ La demo es un proyecto de portafolio. No introduzcas contraseñas, documentos ni
 
 ## Funcionalidades
 
-- Registro de cuentas con validaciones de datos y contraseña.
+- Registro de cuentas con documento único, saldo inicial y redirección automática al inicio de sesión.
+- Correo y teléfono tratados como datos de contacto reutilizables; el documento identifica de forma única cada cuenta.
 - Inicio y cierre de sesión mediante correo electrónico.
-- Contraseñas almacenadas con hash bcrypt; nunca se guardan en texto plano.
+- Contraseñas de mínimo 8 caracteres almacenadas con prehash SHA-256 y bcrypt; nunca se guardan en texto plano.
 - Sesiones protegidas mediante cookies `HttpOnly`, `SameSite` y revocación en PostgreSQL.
 - Protección CSRF, límites de solicitudes, Helmet y política CSP.
-- Saldo inicial simulado de **$500.000 COP** para nuevas cuentas.
+- Saldo inicial simulado de **$ 500.000,00 COP** para nuevas cuentas.
 - Consignaciones a cuentas activas seleccionadas por nombre y número de cuenta.
+- Validación del saldo antes de abrir la confirmación de una consignación.
 - Confirmación previa para consignaciones, retiros y pagos de servicios.
 - Retiros con validación de saldo y monto mínimo.
 - Catálogo ficticio de servicios: energía, agua, gas, internet, telefonía, televisión y administración.
 - Estados simulados de factura: pendiente, pagada, no encontrada y vencida.
 - Historial de movimientos paginado desde PostgreSQL.
-- Extractos y certificados imprimibles.
+- Extractos y certificados imprimibles, con acceso rápido al mes actual.
+- Préstamos ficticios con cotización, plazo, intereses, cuota y desembolso inmediato para pruebas.
 - Panel de superusuario para consultar, desactivar y reactivar cuentas y revisar auditoría.
 - Copias de seguridad automáticas de Neon mediante Vercel Cron.
 - Interfaz responsive con formato monetario colombiano (COP).
@@ -145,6 +148,7 @@ La guía operativa está en [`docs/postgresql-operacion.md`](./docs/postgresql-o
 - `GET /api/accounts/active`
 - `GET /api/transactions`
 - `POST /api/transactions/transfer`, `/withdraw` y `/service-payment`
+- `GET /api/loans`, `POST /api/loans/quote` y `POST /api/loans`
 - `GET /api/certificate`
 - `GET /api/health`
 

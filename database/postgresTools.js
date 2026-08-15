@@ -17,10 +17,19 @@ export async function resolvePostgresTool(toolName) {
   if (configuredPath && await fileExists(configuredPath)) return configuredPath;
 
   if (process.platform === 'win32') {
-    for (const root of ['C:\\Program Files\\PostgreSQL', 'C:\\Program Files (x86)\\PostgreSQL']) {
+    const postgresRoots = [
+      'C:\\Program Files\\PostgreSQL',
+      'C:\\Program Files (x86)\\PostgreSQL',
+      'D:\\Programs\\PostgreSQL',
+      'D:\\Program Files\\PostgreSQL',
+    ];
+    for (const root of postgresRoots) {
       try {
         const versions = await readdir(root, { withFileTypes: true });
-        for (const version of versions.filter((entry) => entry.isDirectory())) {
+        const versionDirectories = versions
+          .filter((entry) => entry.isDirectory())
+          .sort((left, right) => right.name.localeCompare(left.name, undefined, { numeric: true }));
+        for (const version of versionDirectories) {
           const candidate = path.join(root, version.name, 'bin', `${toolName}${extension}`);
           if (await fileExists(candidate)) return candidate;
         }

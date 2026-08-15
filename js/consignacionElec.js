@@ -79,11 +79,14 @@ form.addEventListener('submit', async (event) => {
   }
   setBusy(continueButton, true, 'Consultando…');
   try {
-    const { recipient } = await api(`/transfers/recipient?numeroCuenta=${encodeURIComponent(numeroCuenta)}`);
-    transferPreview = { numeroCuenta, valor, recipient };
+    const query = new URLSearchParams({ numeroCuenta, valor: String(valor) });
+    const { recipient, balance } = await api(`/transfers/recipient?${query}`);
+    transferPreview = { numeroCuenta, valor, recipient, balance };
     document.getElementById('previewRecipient').textContent = recipient.nombreCompleto;
     document.getElementById('previewAccount').textContent = recipient.numeroCuenta;
     document.getElementById('previewAmount').textContent = formatMoney(valor);
+    document.getElementById('previewBalance').textContent = formatMoney(balance.disponible);
+    document.getElementById('previewRemaining').textContent = formatMoney(balance.restante);
     modal.hidden = false;
     commitButton.focus();
   } catch (error) { showMessage(error.message); }

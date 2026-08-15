@@ -16,7 +16,7 @@
     <div class="logo"><img src="/imgs/BancoLogo.png" alt="Banco ACME" class="bancologo"><div class="logo-copy">Banco<strong>ACME</strong></div></div>
     <p class="eyebrow">Apertura digital</p>
     <h1>Abre tu cuenta.</h1>
-    <p class="intro">Completa tus datos para crear una cuenta de demostración segura. Tu cuenta iniciará con un saldo de COP 500.000 para probar las funciones bancarias.</p>
+    <p class="intro">Completa tus datos para crear una cuenta de demostración segura. Tu cuenta iniciará con un saldo de $ 500.000,00 para probar las funciones bancarias.</p>
     <form id="registroForm" class="registration-form" novalidate>
       <fieldset class="form-section"><legend>Identificación</legend><div class="field-grid">
         <div class="field"><label for="tipoDoc">Tipo de documento</label><select id="tipoDoc" required aria-describedby="tipoDocError"><option value="">Selecciona una opción</option><option value="TI">TI</option><option value="CC">CC</option><option value="TE">TE</option><option value="CE">CE</option></select><small id="tipoDocError" class="field-message"></small></div>
@@ -32,8 +32,8 @@
         <div class="field"><label for="ciudad">Ciudad de residencia</label><select id="ciudad" autocomplete="address-level2" required aria-describedby="ciudadError"><option value="">Selecciona una ciudad</option><option>Bogotá</option><option>Medellín</option><option>Cali</option><option>Barranquilla</option><option>Cartagena</option><option>Bucaramanga</option><option>Manizales</option><option>Pereira</option><option>Armenia</option><option>Cúcuta</option><option>Ibagué</option><option>Pasto</option><option>Popayán</option><option>Santa Marta</option><option>Villavicencio</option><option>Neiva</option><option>Valledupar</option><option>Montería</option><option>Tunja</option><option>Riohacha</option><option>Quibdó</option><option>Florencia</option><option>Yopal</option><option>Mocoa</option><option>San Andrés</option><option>Arauca</option><option>Puerto Carreño</option><option>Inírida</option><option>Mitú</option><option>Leticia</option></select><small id="ciudadError" class="field-message"></small></div>
       </div></fieldset>
       <fieldset class="form-section"><legend>Acceso seguro</legend><div class="field-grid">
-        <div class="field"><label for="contrasena">Contraseña</label><input type="password" id="contrasena" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="contrasenaHelp contrasenaError"><p id="contrasenaHelp" class="password-help">8–72 caracteres, con mayúscula, minúscula, número y símbolo.</p><small id="contrasenaError" class="field-message"></small></div>
-        <div class="field"><label for="confirmarContrasena">Confirmar contraseña</label><input type="password" id="confirmarContrasena" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="confirmarContrasenaError"><small id="confirmarContrasenaError" class="field-message"></small></div>
+        <div class="field"><label for="contrasena">Contraseña</label><input type="password" id="contrasena" autocomplete="new-password" minlength="8" required aria-describedby="contrasenaHelp contrasenaError"><p id="contrasenaHelp" class="password-help">Mínimo 8 caracteres.</p><small id="contrasenaError" class="field-message"></small></div>
+        <div class="field"><label for="confirmarContrasena">Confirmar contraseña</label><input type="password" id="confirmarContrasena" autocomplete="new-password" minlength="8" required aria-describedby="confirmarContrasenaError"><small id="confirmarContrasenaError" class="field-message"></small></div>
       </div></fieldset>
       <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
       <div class="button-container"><div class="extra-links">¿Ya tienes cuenta? <a href="/html/login.html">Inicia sesión</a></div><button type="submit">Crear cuenta</button></div>
