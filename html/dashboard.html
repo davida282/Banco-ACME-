@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link href="/css/dashboard.css" rel="stylesheet">
   <link href="/css/acme-system.css" rel="stylesheet">
-  <link rel="icon" type="image/png" href="/imgs/BancoLogo.png">
+  <link rel="icon" type="image/png" href="/imgs/banco-acme-favicon.png">
 </head>
 <body>
-  <header class="app-header"><a href="/html/dashboard.html" class="brand"><img src="/imgs/BancoLogo.png" alt="Banco ACME"><span>Banco ACME</span></a><button id="cerrarSesion" class="logout" type="button">Cerrar sesión <img src="/imgs/logoExit.png" alt=""></button></header>
+  <header class="app-header"><a href="/html/dashboard.html" class="brand"><img src="/imgs/banco-acme-logo.png" alt="Banco ACME"><span>Banco ACME</span></a><button id="cerrarSesion" class="logout" type="button">Cerrar sesión <img src="/imgs/icon-salir.svg" alt=""></button></header>
   <main class="dashboard-shell" aria-busy="true">
     <section class="account-overview" aria-labelledby="account-title">
       <div class="account-copy"><p class="eyebrow" id="welcome">Tu cuenta</p><h1 id="account-title">—</h1><p class="account-meta">Cuenta corriente · <span id="accountNumber">—</span></p><p class="created">Activa desde <span id="createdDate">—</span></p></div>
@@ -21,13 +21,13 @@
     <p id="dashboardMessage" class="dashboard-message" role="status" aria-live="polite">Cargando información de la cuenta…</p>
     <section class="actions-section" aria-labelledby="actions-title"><div class="section-intro"><p class="eyebrow">Operaciones</p><h2 id="actions-title">¿Qué quieres hacer hoy?</h2></div>
       <nav class="acciones" aria-label="Operaciones de cuenta">
-        <a class="accion accent" href="/html/consignacionElec.html"><img src="/imgs/consignacionElectronica.png" alt=""><span>Consignar dinero</span><small>Transferencia a otra cuenta</small></a>
-        <a class="accion" href="/html/retiroDinero.html"><img src="/imgs/retiroDinero.png" alt=""><span>Retirar</span><small>Disponible desde $ 10.000,00</small></a>
-        <a class="accion" href="/html/pagoServicios.html"><img src="/imgs/pagoServicios.png" alt=""><span>Pagar servicios</span><small>Agua, luz, gas e internet</small></a>
-        <a class="accion" href="/html/resumenTrans.html"><img src="/imgs/resumenTransacciones.png" alt=""><span>Movimientos</span><small>Últimas transacciones</small></a>
-        <a class="accion" href="/html/extractoBancario.html"><img src="/imgs/extractoBancario.png" alt=""><span>Extracto</span><small>Consulta por periodo</small></a>
-        <a class="accion" href="/html/certificadoBanc.html"><img src="/imgs/certificadoBancario.png" alt=""><span>Certificado</span><small>Genera tu comprobante</small></a>
-        <a class="accion loan-action" href="/html/prestamos.html"><span class="action-glyph" aria-hidden="true">$</span><span>Préstamos</span><small>Solicita dinero para probar tu cuenta</small></a>
+        <a class="accion accent" href="/html/consignacionElec.html"><img src="/imgs/icon-consignacion.svg" alt=""><span>Consignar dinero</span><small>Transferencia a otra cuenta</small></a>
+        <a class="accion" href="/html/retiroDinero.html"><img src="/imgs/icon-retiro.svg" alt=""><span>Retirar</span><small>Disponible desde $ 10.000,00</small></a>
+        <a class="accion" href="/html/pagoServicios.html"><img src="/imgs/icon-servicios.svg" alt=""><span>Pagar servicios</span><small>Agua, luz, gas e internet</small></a>
+        <a class="accion" href="/html/resumenTrans.html"><img src="/imgs/icon-movimientos.svg" alt=""><span>Movimientos</span><small>Últimas transacciones</small></a>
+        <a class="accion" href="/html/extractoBancario.html"><img src="/imgs/icon-extracto.svg" alt=""><span>Extracto</span><small>Consulta por periodo</small></a>
+        <a class="accion" href="/html/certificadoBanc.html"><img src="/imgs/icon-certificado.svg" alt=""><span>Certificado</span><small>Genera tu comprobante</small></a>
+        <a class="accion loan-action" href="/html/prestamos.html"><img src="/imgs/icon-prestamo.svg" alt=""><span>Préstamos</span><small>Solicita dinero para probar tu cuenta</small></a>
       </nav>
     </section>
   </main>
