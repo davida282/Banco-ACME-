@@ -822,7 +822,8 @@ app.use('/js', express.static(path.join(rootDir, 'js')));
 app.use('/imgs', express.static(path.join(rootDir, 'imgs')));
 app.use('/html', express.static(path.join(rootDir, 'html')));
 app.use('/screens', express.static(path.join(rootDir, 'screens')));
-app.get('/', (_req, res) => res.redirect('/html/login.html'));
+// La portada se mantiene limpia: muestra el acceso sin exponer la ruta interna /html/login.html.
+app.get('/', (_req, res) => res.sendFile(path.join(rootDir, 'html', 'login.html')));
 app.use((error, _req, res, _next) => {
   if (!error.status || error.status >= 500) console.error(error);
   res.status(error.status ?? 500).json({ error: error.status ? error.message : 'Error interno del servidor.' });
