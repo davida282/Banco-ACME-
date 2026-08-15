@@ -8,7 +8,6 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { createToken, csrfCookieOptions, requireAuth, requireSuperuser, SESSION_COOKIE, sessionCookieOptions, SESSION_DURATION_MS } from './auth.js';
 import { pool, withTransaction } from './db.js';
-import { recoveryEmailConfigured, sendPasswordRecoveryEmail } from './email.js';
 import { csrfProtection, ensureCsrfCookie, hashIp, hashResetToken } from './security.js';
 import { appOrigin, isProduction, port } from './config.js';
 
@@ -323,19 +322,29 @@ app.post('/api/auth/logout', requireAuth, async (req, res, next) => {
 app.post('/api/auth/recovery', recoveryLimiter, async (req, res, next) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();
   if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Ingresa un correo válido.' });
-  if (!recoveryEmailConfigured()) return res.status(503).json({ error: 'La recuperación por correo aún no está configurada.' });
   try {
-    const { rows } = await pool.query("SELECT id, email FROM usuarios WHERE LOWER(email)=$1 AND estado='activa'", [email]);
-    for (const user of rows) {
-      const rawToken = crypto.randomBytes(32).toString('base64url');
-      await withTransaction(async (client) => {
-        await client.query('UPDATE tokens_recuperacion_contrasena SET usado_en=NOW() WHERE usuario_id=$1 AND usado_en IS NULL', [user.id]);
-        await client.query('INSERT INTO tokens_recuperacion_contrasena (usuario_id, token_hash, expira_en) VALUES ($1,$2,NOW() + INTERVAL \'15 minutes\')', [user.id, hashResetToken(rawToken)]);
-      });
-      const resetUrl = `${appOrigin}/nueva-contrasena?token=${encodeURIComponent(rawToken)}`;
-      await sendPasswordRecoveryEmail({ to: user.email, resetUrl });
+    const { rows } = await pool.query(
+      "SELECT id, email, rol FROM usuarios WHERE LOWER(email)=$1 AND estado='activa' ORDER BY id",
+      [email],
+    );
+    if (!rows.length) return res.status(404).json({ error: 'No encontramos una cuenta activa con ese correo.' });
+    if (rows.some((user) => user.rol === 'superusuario')) {
+      return res.status(403).json({ error: 'La cuenta administrativa no admite recuperación simulada.' });
     }
-    return res.status(202).json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
+    if (rows.length > 1) {
+      return res.status(409).json({ error: 'Ese correo está asociado a varias cuentas. Usa un correo diferente para cada cuenta.' });
+    }
+
+    const user = rows[0];
+    const rawToken = crypto.randomBytes(32).toString('base64url');
+    await withTransaction(async (client) => {
+      await client.query('UPDATE tokens_recuperacion_contrasena SET usado_en=NOW() WHERE usuario_id=$1 AND usado_en IS NULL', [user.id]);
+      await client.query('INSERT INTO tokens_recuperacion_contrasena (usuario_id, token_hash, expira_en) VALUES ($1,$2,NOW() + INTERVAL \'15 minutes\')', [user.id, hashResetToken(rawToken)]);
+    });
+    return res.status(201).json({
+      message: 'Correo confirmado. Ahora crea una nueva contraseña.',
+      resetToken: rawToken,
+    });
   } catch (error) { return next(error); }
 });
 

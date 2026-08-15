@@ -4,8 +4,6 @@ const environment = process.env.NODE_ENV ?? 'development';
 export const isProduction = environment === 'production';
 export const port = Number(process.env.PORT ?? 3000);
 export const jwtSecret = String(process.env.JWT_SECRET ?? '');
-export const emailFrom = String(process.env.EMAIL_FROM ?? '').trim();
-export const resendApiKey = String(process.env.RESEND_API_KEY ?? '').trim();
 
 function required(value, name) {
   if (!value) throw new Error(`Falta la variable de entorno ${name}.`);
@@ -35,9 +33,6 @@ function normalizeSecureDatabaseUrl(value) {
 
 const databaseUrl = normalizeSecureDatabaseUrl(String(process.env.DATABASE_URL ?? '').trim());
 if (isProduction && !databaseUrl) throw new Error('DATABASE_URL es obligatoria en producción.');
-if ((resendApiKey && !emailFrom) || (!resendApiKey && emailFrom)) {
-  throw new Error('RESEND_API_KEY y EMAIL_FROM deben configurarse juntos.');
-}
 
 const useSsl = Boolean(databaseUrl) && (isProduction || process.env.DATABASE_SSL === 'true');
 const rejectUnauthorized = process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false';
@@ -58,5 +53,4 @@ export const databaseConfig = databaseUrl
 export const publicRuntimeConfig = {
   environment,
   appOrigin,
-  emailRecoveryConfigured: Boolean(resendApiKey && emailFrom),
 };

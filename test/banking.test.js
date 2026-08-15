@@ -16,6 +16,7 @@ let temporaryUserId;
 let temporaryUserAccount;
 let temporaryRecipientId;
 let temporaryRecipientAccount;
+let temporaryRecipientEmail;
 let temporaryAdminId;
 let temporaryAdminEmail;
 let administrativeTargetId;
@@ -51,10 +52,11 @@ before(async () => {
 
   const recipientDocument = String(7_100_000_000 + crypto.randomInt(1_000_000));
   temporaryRecipientAccount = String(8_100_000_000_000_000 + crypto.randomInt(1_000_000));
+  temporaryRecipientEmail = `recipient.${recipientDocument}@acme.local`;
   const { rows: recipientRows } = await pool.query(
     `INSERT INTO usuarios (numero_cuenta,tipo_documento,documento,nombres,apellidos,email,telefono,direccion,ciudad,genero,password_hash,saldo,creado_en)
      VALUES ($1,'CC',$2,'Destino','Prueba',$3,$2,'Pruebas automatizadas','Bogotá','No especificado',$4,0,NOW()) RETURNING id`,
-    [temporaryRecipientAccount, recipientDocument, `recipient.${recipientDocument}@acme.local`, passwordHash],
+    [temporaryRecipientAccount, recipientDocument, temporaryRecipientEmail, passwordHash],
   );
   temporaryRecipientId = recipientRows[0].id;
 
@@ -118,6 +120,42 @@ test('las pantallas públicas se sirven desde rutas limpias', async () => {
   const routes = ['/', '/login', '/registro', '/recuperar-contrasena', '/nueva-contrasena', '/dashboard', '/consignar', '/retirar', '/pagar-servicios', '/movimientos', '/extracto', '/extracto/resultado', '/certificado', '/prestamos', '/superusuario', '/consignacion-exitosa', '/retiro-exitoso', '/pago-exitoso'];
   const responses = await Promise.all(routes.map((route) => request(route)));
   responses.forEach((response) => assert.equal(response.status, 200));
+});
+
+test('la recuperación simulada cambia la contraseña una sola vez y protege al superusuario', async () => {
+  const csrfResponse = await request('/api/auth/csrf');
+  const csrfCookie = cookiePairs(csrfResponse).find((value) => value.startsWith('acme_csrf='));
+  assert.ok(csrfCookie);
+  const csrf = csrfCookie.split('=', 2)[1];
+  const headers = { 'Content-Type': 'application/json', Cookie: csrfCookie, 'X-CSRF-Token': csrf };
+
+  const recoveryResponse = await request('/api/auth/recovery', {
+    method: 'POST', headers, body: JSON.stringify({ email: temporaryRecipientEmail }),
+  });
+  assert.equal(recoveryResponse.status, 201);
+  const { resetToken } = await recoveryResponse.json();
+  assert.ok(resetToken.length >= 40);
+
+  const newPassword = 'Nueva-clave-demo-2026!';
+  const resetResponse = await request('/api/auth/reset-password', {
+    method: 'POST', headers, body: JSON.stringify({ resetToken, contrasena: newPassword }),
+  });
+  assert.equal(resetResponse.status, 204);
+
+  const repeatedReset = await request('/api/auth/reset-password', {
+    method: 'POST', headers, body: JSON.stringify({ resetToken, contrasena: 'Otra-clave-demo-2026!' }),
+  });
+  assert.equal(repeatedReset.status, 401);
+
+  const loginResponse = await request('/api/auth/login', {
+    method: 'POST', headers, body: JSON.stringify({ email: temporaryRecipientEmail, contrasena: newPassword }),
+  });
+  assert.equal(loginResponse.status, 200);
+
+  const protectedRecovery = await request('/api/auth/recovery', {
+    method: 'POST', headers, body: JSON.stringify({ email: temporaryAdminEmail }),
+  });
+  assert.equal(protectedRecovery.status, 403);
 });
 
 test('la automatización de respaldos rechaza peticiones públicas', async () => {

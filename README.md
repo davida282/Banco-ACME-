@@ -32,6 +32,7 @@ Las rutas anteriores permanecen disponibles para compatibilidad, pero la navegac
 - Registro de cuentas con documento único, saldo inicial y redirección automática al inicio de sesión.
 - Correo y teléfono tratados como datos de contacto reutilizables; el documento identifica de forma única cada cuenta.
 - Inicio y cierre de sesión mediante correo electrónico.
+- Recuperación simulada en dos pasos desde la misma página, con token temporal de un solo uso y protección de la cuenta administrativa.
 - Contraseñas de mínimo 8 caracteres almacenadas con prehash SHA-256 y bcrypt; nunca se guardan en texto plano.
 - Sesiones protegidas mediante cookies `HttpOnly`, `SameSite` y revocación en PostgreSQL.
 - Protección CSRF, límites de solicitudes, Helmet y política CSP.
@@ -131,7 +132,6 @@ Variables principales:
 | `DATABASE_URL` | Conexión PostgreSQL de producción |
 | `JWT_SECRET` | Secreto de sesiones, mínimo 32 caracteres |
 | `DATABASE_SSL` | Activa TLS para PostgreSQL |
-| `RESEND_API_KEY` / `EMAIL_FROM` | Recuperación real por correo, opcional |
 | `NEON_API_KEY` / `NEON_PROJECT_ID` / `NEON_BRANCH_ID` | Respaldo automático de Neon |
 | `CRON_SECRET` | Protege la ruta de respaldo programado |
 
