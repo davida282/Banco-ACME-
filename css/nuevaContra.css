@@ -7,6 +7,7 @@ img {
   user-select: none;
   pointer-events: none;
 }
+.bancologo{width:44px;height:44px}
 
 h1 { margin:0 0 24px; font:600 clamp(34px,7vw,48px)/.96 'Playfair Display',Georgia,serif; letter-spacing:-.045em; }
 .input-group label { display:block; margin-bottom:8px; color:var(--ink); font-size:12px; font-weight:700; }
