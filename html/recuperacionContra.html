@@ -11,15 +11,65 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="/imgs/banco-acme-favicon.png">
 </head>
-<body>
-  <main class="container"><div class="logo"><div><span>banco</span><br><span class="acme">ACME</span></div><img src="/imgs/banco-acme-logo.png" alt="Logo de Banco ACME" class="bancologo"></div>
-    <h1>Recuperación de contraseña</h1><div class="form-box"><form id="recuperarForm" novalidate>
-      <p class="label" id="recoveryHelp">Introduce el correo asociado a tu cuenta.</p>
-      <div class="input-group"><label class="sr-only" for="correo">Correo electrónico</label><input type="email" id="correo" autocomplete="email" placeholder="Correo electrónico" required aria-describedby="recoveryHelp formMessage"></div>
-      <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
-      <button type="submit">Enviar enlace</button>
-      <div class="extras"><p class="forgot"><a href="/">Volver</a></p></div>
-    </form></div>
+<body class="recovery-page">
+  <main class="container">
+    <a class="brand" href="/" aria-label="Volver al inicio de Banco ACME">
+      <img src="/imgs/banco-acme-logo.png" alt="" class="bancologo">
+      <span>Banco ACME</span>
+    </a>
+
+    <p class="eyebrow">Seguridad de cuenta</p>
+    <h1>Recupera tu acceso.</h1>
+    <p class="intro">Confirma el correo de tu cuenta de demostración y define una nueva contraseña.</p>
+
+    <ol class="recovery-progress" aria-label="Progreso de recuperación">
+      <li id="emailProgress" class="is-active" aria-current="step"><span>01</span> Correo</li>
+      <li id="passwordProgress"><span>02</span> Nueva contraseña</li>
+    </ol>
+
+    <div class="form-box">
+      <form id="recuperarForm" novalidate>
+        <fieldset id="emailStep">
+          <legend class="sr-only">Confirmar correo electrónico</legend>
+          <div class="input-group">
+            <label for="correo">Correo electrónico</label>
+            <input type="email" id="correo" autocomplete="email" placeholder="nombre@correo.com" required aria-describedby="emailHelp formMessage">
+            <p id="emailHelp" class="field-help">Debe ser el correo de una cuenta activa.</p>
+          </div>
+          <button type="submit" id="continueButton">Continuar</button>
+        </fieldset>
+
+        <fieldset id="passwordStep" hidden>
+          <legend class="sr-only">Crear una nueva contraseña</legend>
+          <div class="verified-account">
+            <div><span>Correo confirmado</span><strong id="verifiedEmail"></strong></div>
+            <button type="button" id="changeEmail" class="text-button">Cambiar</button>
+          </div>
+          <div class="input-group">
+            <label for="contrasena">Nueva contraseña</label>
+            <input type="password" id="contrasena" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="passwordHelp formMessage">
+            <p id="passwordHelp" class="field-help">Usa mínimo 8 caracteres.</p>
+          </div>
+          <div class="input-group">
+            <label for="confirmarContra">Confirmar contraseña</label>
+            <input type="password" id="confirmarContra" autocomplete="new-password" minlength="8" maxlength="72" required aria-describedby="confirmHelp formMessage">
+            <p id="confirmHelp" class="field-help">Escríbela nuevamente para confirmar.</p>
+          </div>
+          <button type="submit" id="resetButton">Actualizar contraseña</button>
+        </fieldset>
+
+        <p id="formMessage" class="form-message" role="alert" aria-live="polite"></p>
+        <div class="extras"><a href="/">Volver al inicio de sesión</a></div>
+      </form>
+
+      <section id="successPanel" class="success-panel" tabindex="-1" hidden>
+        <span class="success-mark" aria-hidden="true">✓</span>
+        <p class="eyebrow">Cambio confirmado</p>
+        <h2>Contraseña actualizada.</h2>
+        <p>Ya puedes ingresar con tu correo y la nueva contraseña.</p>
+        <a class="primary-link" href="/">Iniciar sesión</a>
+      </section>
+    </div>
   </main>
   <script type="module" src="/js/recuperacionContra.js"></script>
 </body>
