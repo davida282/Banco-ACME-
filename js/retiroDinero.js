@@ -98,7 +98,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         valor: transaction.valor,
       }));
       sessionStorage.setItem('permisoRetiro', 'true');
-      window.location.href = '/screens/completedRetiro.html';
+      window.location.href = '/retiro-exitoso';
     } catch (error) {
       setMessage(modalMessage, error.message);
       submitting = false;

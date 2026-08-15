@@ -4,7 +4,7 @@ const transaction = JSON.parse(sessionStorage.getItem('datosRetiro') ?? 'null');
 const allowed = sessionStorage.getItem('permisoRetiro') === 'true';
 
 if (!allowed || !transaction) {
-  window.location.replace('/html/dashboard.html');
+  window.location.replace('/dashboard');
 } else {
   sessionStorage.removeItem('permisoRetiro');
   sessionStorage.removeItem('datosRetiro');
@@ -16,7 +16,7 @@ if (!allowed || !transaction) {
 }
 
 document.getElementById('volver').addEventListener('click', () => {
-  window.location.href = '/html/dashboard.html';
+  window.location.href = '/dashboard';
 });
 
 document.getElementById('imprimir').addEventListener('click', () => window.print());

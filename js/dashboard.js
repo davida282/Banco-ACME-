@@ -16,7 +16,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (user.rol === 'superusuario') {
       const action = document.createElement('a');
       action.className = 'accion accent';
-      action.href = '/html/superusuario.html';
+      action.href = '/superusuario';
       const title = document.createElement('span'); title.textContent = 'Control administrativo';
       const description = document.createElement('small'); description.textContent = 'Gestiona usuarios, saldos y auditoría';
       action.append(title, description);
@@ -31,5 +31,5 @@ logoutButton.addEventListener('click', async () => {
   setBusy(logoutButton, true, 'Cerrando sesión…');
   try { await api('/auth/logout', { method: 'POST' }); } catch { /* La sesión puede haber vencido. */ }
   clearSession();
-  window.location.replace('/html/login.html');
+  window.location.replace('/');
 });

@@ -59,7 +59,7 @@ form.addEventListener('submit', async (event) => {
     const { user } = await api('/auth/register', { method: 'POST', body: JSON.stringify(data) });
     setMessage(message, `Cuenta creada con ${formatMoney(user.saldo)}. Te llevaremos al inicio de sesión.`, 'success');
     form.reset();
-    setTimeout(() => window.location.replace('/html/login.html?registro=exitoso'), 1200);
+    setTimeout(() => window.location.replace('/?registro=exitoso'), 1200);
   } catch (error) { setMessage(message, error.message); }
   finally { setBusy(submitButton, false); }
 });

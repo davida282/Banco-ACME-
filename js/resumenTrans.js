@@ -59,10 +59,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     await currentUser();
     await loadPage(1);
-  } catch { window.location.replace('/html/login.html'); }
+  } catch { window.location.replace('/'); }
 });
 
 previousButton.addEventListener('click', () => { if (currentPage > 1) loadPage(currentPage - 1); });
 nextButton.addEventListener('click', () => loadPage(currentPage + 1));
-document.getElementById('volver').addEventListener('click', () => { window.location.href = '/html/dashboard.html'; });
+document.getElementById('volver').addEventListener('click', () => { window.location.href = '/dashboard'; });
 document.getElementById('btnImprimir').addEventListener('click', () => window.print());

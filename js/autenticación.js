@@ -12,7 +12,7 @@ if (params.get('registro') === 'exitoso') {
   history.replaceState({}, document.title, window.location.pathname);
 }
 
-currentUser({ redirectOnUnauthorized: false }).then(() => window.location.replace('/html/dashboard.html')).catch(() => {});
+currentUser({ redirectOnUnauthorized: false }).then(() => window.location.replace('/dashboard')).catch(() => {});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -25,7 +25,7 @@ form.addEventListener('submit', async (event) => {
   setBusy(submitButton, true, 'Iniciando sesión…');
   try {
     await api('/auth/login', { method: 'POST', body: JSON.stringify({ email, contrasena }) });
-    window.location.replace('/html/dashboard.html');
+    window.location.replace('/dashboard');
   } catch (error) { showMessage(error.message); }
   finally { setBusy(submitButton, false); }
 });

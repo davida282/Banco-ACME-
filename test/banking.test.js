@@ -111,7 +111,13 @@ test('extractos incluye el acceso rápido al mes actual y registro redirige al i
   assert.match(statementHtml, /id="currentPeriodBtn"/);
   assert.match(statementScript, /getFullYear\(\)/);
   assert.match(statementScript, /getMonth\(\) \+ 1/);
-  assert.match(registerScript, /window\.location\.replace\('\/html\/login\.html\?registro=exitoso'\)/);
+  assert.match(registerScript, /window\.location\.replace\('\/\?registro=exitoso'\)/);
+});
+
+test('las pantallas públicas se sirven desde rutas limpias', async () => {
+  const routes = ['/', '/login', '/registro', '/recuperar-contrasena', '/nueva-contrasena', '/dashboard', '/consignar', '/retirar', '/pagar-servicios', '/movimientos', '/extracto', '/extracto/resultado', '/certificado', '/prestamos', '/superusuario', '/consignacion-exitosa', '/retiro-exitoso', '/pago-exitoso'];
+  const responses = await Promise.all(routes.map((route) => request(route)));
+  responses.forEach((response) => assert.equal(response.status, 200));
 });
 
 test('la automatización de respaldos rechaza peticiones públicas', async () => {

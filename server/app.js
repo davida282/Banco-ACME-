@@ -332,7 +332,7 @@ app.post('/api/auth/recovery', recoveryLimiter, async (req, res, next) => {
         await client.query('UPDATE tokens_recuperacion_contrasena SET usado_en=NOW() WHERE usuario_id=$1 AND usado_en IS NULL', [user.id]);
         await client.query('INSERT INTO tokens_recuperacion_contrasena (usuario_id, token_hash, expira_en) VALUES ($1,$2,NOW() + INTERVAL \'15 minutes\')', [user.id, hashResetToken(rawToken)]);
       });
-      const resetUrl = `${appOrigin}/screens/nuevaContra.html?token=${encodeURIComponent(rawToken)}`;
+      const resetUrl = `${appOrigin}/nueva-contrasena?token=${encodeURIComponent(rawToken)}`;
       await sendPasswordRecoveryEmail({ to: user.email, resetUrl });
     }
     return res.status(202).json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
@@ -822,8 +822,32 @@ app.use('/js', express.static(path.join(rootDir, 'js')));
 app.use('/imgs', express.static(path.join(rootDir, 'imgs')));
 app.use('/html', express.static(path.join(rootDir, 'html')));
 app.use('/screens', express.static(path.join(rootDir, 'screens')));
-// La portada se mantiene limpia: muestra el acceso sin exponer la ruta interna /html/login.html.
-app.get('/', (_req, res) => res.sendFile(path.join(rootDir, 'html', 'login.html')));
+
+// Las pantallas mantienen sus archivos internos, pero se exponen con rutas claras para las personas.
+const publicPages = {
+  '/': ['html', 'login.html'],
+  '/login': ['html', 'login.html'],
+  '/registro': ['html', 'registro.html'],
+  '/recuperar-contrasena': ['html', 'recuperacionContra.html'],
+  '/nueva-contrasena': ['screens', 'nuevaContra.html'],
+  '/dashboard': ['html', 'dashboard.html'],
+  '/consignar': ['html', 'consignacionElec.html'],
+  '/retirar': ['html', 'retiroDinero.html'],
+  '/pagar-servicios': ['html', 'pagoServicios.html'],
+  '/movimientos': ['html', 'resumenTrans.html'],
+  '/extracto': ['html', 'extractoBancario.html'],
+  '/extracto/resultado': ['screens', 'resultExtracto.html'],
+  '/certificado': ['html', 'certificadoBanc.html'],
+  '/prestamos': ['html', 'prestamos.html'],
+  '/superusuario': ['html', 'superusuario.html'],
+  '/consignacion-exitosa': ['screens', 'completedConsign.html'],
+  '/retiro-exitoso': ['screens', 'completedRetiro.html'],
+  '/pago-exitoso': ['screens', 'completedServicio.html'],
+};
+
+Object.entries(publicPages).forEach(([route, filePath]) => {
+  app.get(route, (_req, res) => res.sendFile(path.join(rootDir, ...filePath)));
+});
 app.use((error, _req, res, _next) => {
   if (!error.status || error.status >= 500) console.error(error);
   res.status(error.status ?? 500).json({ error: error.status ? error.message : 'Error interno del servidor.' });

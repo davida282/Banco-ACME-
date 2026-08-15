@@ -418,7 +418,7 @@ document.getElementById('reloadUsers').addEventListener('click', async (event) =
 window.addEventListener('DOMContentLoaded', async () => {
   try {
     currentAdmin = await currentUser();
-    if (currentAdmin.rol !== 'superusuario') return window.location.replace('/html/dashboard.html');
+    if (currentAdmin.rol !== 'superusuario') return window.location.replace('/dashboard');
     document.getElementById('adminIdentity').textContent = `${currentAdmin.nombres} ${currentAdmin.apellidos}`;
     await loadData({ preserveSelection: false });
   } catch (error) {

@@ -10,7 +10,7 @@ const valorSpan = document.getElementById('valor');
 const permiso = sessionStorage.getItem('permisoServicio');
 
 if (permiso !== 'true') {
-  window.location.href = '/html/dashboard.html';
+  window.location.href = '/dashboard';
 } else {
   sessionStorage.removeItem('permisoServicio');
 }
@@ -25,11 +25,11 @@ if (datosTransaccion) {
   valorSpan.textContent = formatMoney(datosTransaccion.valor);
   sessionStorage.removeItem('datosPagoServicio');
 } else {
-  window.location.href = '/html/dashboard.html';
+  window.location.href = '/dashboard';
 }
 
 volverBtn.addEventListener('click', () => {
-  window.location.href = '/html/dashboard.html';
+  window.location.href = '/dashboard';
 });
 
 document.getElementById('imprimir').addEventListener('click', () => {
