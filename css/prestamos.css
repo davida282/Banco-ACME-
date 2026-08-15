@@ -6,6 +6,7 @@
 .loan-workspace { display:grid; grid-template-columns:1fr; gap:24px; align-items:start; }
 .loan-workspace.has-quote { grid-template-columns:minmax(0,1fr) minmax(310px,.8fr); }
 .loan-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; padding:24px; border:1px solid var(--acme-line); background:#fffefa; }
+.loan-form .form-group { align-content:start; min-width:0; }
 .account-strip { grid-column:1/-1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:18px; color:#fff; background:var(--acme-ink); }
 .account-strip div { display:grid; gap:6px; }
 .account-strip span { color:#b9c6cb; font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; }
