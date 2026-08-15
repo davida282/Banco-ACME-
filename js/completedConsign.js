@@ -4,7 +4,7 @@ const datosTransaccion = JSON.parse(sessionStorage.getItem('datosConsignacion') 
 const permiso = sessionStorage.getItem('permisoConsignacion');
 
 if (permiso !== 'true' || !datosTransaccion) {
-  window.location.replace('/html/dashboard.html');
+  window.location.replace('/dashboard');
 } else {
   sessionStorage.removeItem('permisoConsignacion');
   sessionStorage.removeItem('datosConsignacion');
@@ -16,5 +16,5 @@ if (permiso !== 'true' || !datosTransaccion) {
   document.getElementById('valor').textContent = formatMoney(datosTransaccion.valor);
 }
 
-document.getElementById('volver').addEventListener('click', () => { window.location.href = '/html/dashboard.html'; });
+document.getElementById('volver').addEventListener('click', () => { window.location.href = '/dashboard'; });
 document.getElementById('imprimir').addEventListener('click', () => { window.print(); });

@@ -3,7 +3,7 @@ import { setBusy, setMessage } from './ui.js';
 
 const resetToken = new URLSearchParams(window.location.search).get('token');
 if (resetToken) history.replaceState({}, document.title, window.location.pathname);
-if (!resetToken) window.location.replace('/html/login.html');
+if (!resetToken) window.location.replace('/');
 
 const form = document.getElementById('recuperarForm');
 const message = document.getElementById('formMessage');
@@ -18,7 +18,7 @@ form.addEventListener('submit', async (event) => {
   setBusy(submitButton, true, 'Actualizando contraseña…');
   try {
     await api('/auth/reset-password', { method: 'POST', body: JSON.stringify({ resetToken, contrasena }) });
-    window.location.replace('/html/login.html');
+    window.location.replace('/');
   } catch (error) { showMessage(error.message); }
   finally { setBusy(submitButton, false); }
 });

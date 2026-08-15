@@ -16,7 +16,7 @@ export function clearSession() {
 
 export function goToLogin() {
   clearSession();
-  window.location.replace('/html/login.html');
+  window.location.replace('/');
 }
 
 export function newIdempotencyKey() {

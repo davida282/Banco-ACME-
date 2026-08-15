@@ -110,7 +110,7 @@ commitButton.addEventListener('click', async () => {
       valor: transaction.valor, destinatario: transaction.destinatario, cuentaDestino: transaction.cuentaDestino,
     }));
     sessionStorage.setItem('permisoConsignacion', 'true');
-    window.location.href = '/screens/completedConsign.html';
+    window.location.href = '/consignacion-exitosa';
   } catch (error) {
     setMessage(modalMessage, error.message);
     submitting = false;

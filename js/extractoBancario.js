@@ -36,6 +36,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     setMessage(message, '', 'info');
     setBusy(submitButton, true, 'Generando extracto…');
     localStorage.setItem('filtrosExtracto', JSON.stringify({ anio, mes }));
-    window.location.href = '/screens/resultExtracto.html';
+    window.location.href = '/extracto/resultado';
   });
 });

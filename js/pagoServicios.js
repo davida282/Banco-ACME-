@@ -151,7 +151,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       });
       sessionStorage.setItem('permisoServicio', 'true');
       sessionStorage.setItem('datosPagoServicio', JSON.stringify({ fecha: new Date(transaction.fecha).toLocaleString('es-CO'), referencia: transaction.referencia, servicio: transaction.service?.name ?? paymentPreview.config.name, empresa: transaction.service?.company ?? paymentPreview.config.company, valor: transaction.valor }));
-      window.location.href = '/screens/completedServicio.html';
+      window.location.href = '/pago-exitoso';
     } catch (error) {
       setMessage(modalMessage, error.message);
       submitting = false;

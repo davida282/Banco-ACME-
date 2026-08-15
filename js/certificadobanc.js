@@ -14,5 +14,5 @@ window.addEventListener('DOMContentLoaded', async () => {
   } catch (error) { if (error.message) setMessage(certificateMessage, error.message); }
   finally { setRegionBusy(certificate, false); }
 });
-document.getElementById('volver').addEventListener('click', () => { window.location.href = '/html/dashboard.html'; });
+document.getElementById('volver').addEventListener('click', () => { window.location.href = '/dashboard'; });
 document.getElementById('imprimir').addEventListener('click', () => window.print());

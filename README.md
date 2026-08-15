@@ -12,6 +12,21 @@ Puedes probar la aplicación en:
 
 La demo es un proyecto de portafolio. No introduzcas contraseñas, documentos ni información bancaria real.
 
+## Rutas públicas
+
+La aplicación expone direcciones limpias; no es necesario navegar a las carpetas internas `html/` o `screens/`.
+
+| Pantalla | Ruta |
+| --- | --- |
+| Inicio de sesión | `/` |
+| Panel principal | `/dashboard` |
+| Consignar, retirar y pagar | `/consignar`, `/retirar`, `/pagar-servicios` |
+| Movimientos y extractos | `/movimientos`, `/extracto` |
+| Certificado y préstamos | `/certificado`, `/prestamos` |
+| Administración | `/superusuario` |
+
+Las rutas anteriores permanecen disponibles para compatibilidad, pero la navegación interna usa las direcciones limpias.
+
 ## Funcionalidades
 
 - Registro de cuentas con documento único, saldo inicial y redirección automática al inicio de sesión.
