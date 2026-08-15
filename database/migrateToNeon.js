@@ -30,6 +30,10 @@ const tables = [
     columns: ['id', 'usuario_id', 'cuenta_destino_id', 'referencia', 'tipo', 'concepto', 'valor', 'fecha', 'estado', 'clave_idempotencia', 'servicio_codigo', 'referencia_servicio', 'empresa_servicio'],
   },
   {
+    name: 'prestamos',
+    columns: ['id', 'usuario_id', 'transaccion_id', 'referencia', 'monto', 'plazo_meses', 'tasa_mensual', 'intereses', 'total_pagar', 'cuota_mensual', 'estado', 'creado_en'],
+  },
+  {
     name: 'auditoria_administrativa',
     columns: ['id', 'administrador_id', 'usuario_afectado_id', 'transaccion_id', 'accion', 'motivo', 'detalle', 'creada_en'],
   },
@@ -100,6 +104,7 @@ try {
 
     await client.query("SELECT setval(pg_get_serial_sequence('usuarios', 'id'), COALESCE((SELECT MAX(id) FROM usuarios), 1), true)");
     await client.query("SELECT setval(pg_get_serial_sequence('transacciones', 'id'), COALESCE((SELECT MAX(id) FROM transacciones), 1), true)");
+    await client.query("SELECT setval(pg_get_serial_sequence('prestamos', 'id'), COALESCE((SELECT MAX(id) FROM prestamos), 1), true)");
     await client.query("SELECT setval(pg_get_serial_sequence('tokens_recuperacion_contrasena', 'id'), COALESCE((SELECT MAX(id) FROM tokens_recuperacion_contrasena), 1), true)");
     await client.query("SELECT setval(pg_get_serial_sequence('auditoria_administrativa', 'id'), COALESCE((SELECT MAX(id) FROM auditoria_administrativa), 1), true)");
     await client.query("SELECT setval('usuarios_numero_cuenta_seq', COALESCE((SELECT MAX(numero_cuenta::BIGINT) FROM usuarios), 1000000000000000), true)");

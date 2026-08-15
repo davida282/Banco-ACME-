@@ -6,3 +6,6 @@ node_modules/
 *.log
 database/*-export.json
 backups/
+output/
+tmp/
+.playwright-cli/

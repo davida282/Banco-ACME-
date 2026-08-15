@@ -119,3 +119,14 @@ input#cantidad {
 .confirmar:hover {
     background-color: #c2992c;
 }
+
+.periodo-actual {
+    border-color: var(--acme-gold-dark) !important;
+    color: var(--acme-gold-dark) !important;
+    background: transparent !important;
+}
+
+.periodo-actual:hover {
+    color: #fffdf7 !important;
+    background: var(--acme-gold-dark) !important;
+}

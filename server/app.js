@@ -16,6 +16,11 @@ const app = express();
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const accountColumns = `id, numero_cuenta, tipo_documento, documento, nombres, apellidos, email, telefono, direccion, ciudad, genero, saldo, creado_en, rol, estado`;
 const INITIAL_ACCOUNT_BALANCE_COP = 500_000;
+const LOAN_MIN_COP = 50_000;
+const LOAN_MAX_COP = 5_000_000;
+const LOAN_MONTHLY_RATE = 0.015;
+const LOAN_TERMS = new Set([3, 6, 12]);
+const PASSWORD_HASH_PREFIX = 'bcrypt-sha256$';
 
 function secretsMatch(received, expected) {
   const receivedValue = Buffer.from(received ?? '');
@@ -142,11 +147,46 @@ const amount = (value, min = 1) => Number.isSafeInteger(Number(value)) && Number
 const reference = () => String(crypto.randomInt(1_000_000_000, 9_999_999_999));
 const validName = (value) => typeof value === 'string' && /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[\s'-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/.test(value.trim()) && validText(value, 2, 40);
 const validEmail = (value) => typeof value === 'string' && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-const validPassword = (value) => typeof value === 'string'
-  && value.length >= 8 && value.length <= 72 && !/\s/.test(value)
-  && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value);
+const validPassword = (value) => typeof value === 'string' && value.length >= 8;
 const documentTypes = new Set(['TI', 'CC', 'TE', 'CE']);
 const genders = new Set(['Masculino', 'Femenino', 'No especificado']);
+
+function passwordDigest(value) {
+  return crypto.createHash('sha256').update(value, 'utf8').digest('base64');
+}
+
+async function hashPassword(value) {
+  return `${PASSWORD_HASH_PREFIX}${await bcrypt.hash(passwordDigest(value), 12)}`;
+}
+
+async function verifyPassword(value, storedHash) {
+  if (storedHash.startsWith(PASSWORD_HASH_PREFIX)) {
+    return bcrypt.compare(passwordDigest(value), storedHash.slice(PASSWORD_HASH_PREFIX.length));
+  }
+  return bcrypt.compare(value, storedHash);
+}
+
+function loanQuote(value, term) {
+  const interest = Math.round(value * LOAN_MONTHLY_RATE * term);
+  const total = value + interest;
+  return {
+    monto: value,
+    plazoMeses: term,
+    tasaMensual: LOAN_MONTHLY_RATE,
+    intereses: interest,
+    totalPagar: total,
+    cuotaMensual: Math.ceil(total / term),
+  };
+}
+
+function publicLoan(row) {
+  return {
+    id: Number(row.id), referencia: row.referencia, monto: Number(row.monto),
+    plazoMeses: Number(row.plazo_meses), tasaMensual: Number(row.tasa_mensual),
+    intereses: Number(row.intereses), totalPagar: Number(row.total_pagar),
+    cuotaMensual: Number(row.cuota_mensual), estado: row.estado, fecha: row.creado_en,
+  };
+}
 
 const serviceCatalog = {
   energia: { code: 'energia', name: 'Energía', company: 'Energía Andina S.A. E.S.P.', type: 'Servicio público', referenceFormat: 'ENE-########', referencePattern: /^ENE-\d{8}$/, minAmount: 10000, maxAmount: 900000 },
@@ -222,15 +262,17 @@ async function previousMovement(client, userId, key) {
 
 app.post('/api/auth/register', authLimiter, async (req, res, next) => {
   const body = req.body ?? {};
-  const required = ['tipoDocumento', 'genero', 'ciudad', 'documento', 'telefono', 'nombres', 'apellidos', 'direccion', 'contrasena', 'email'];
-  if (required.some((key) => !validText(body[key]))) return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+  const required = ['tipoDocumento', 'genero', 'ciudad', 'documento', 'telefono', 'nombres', 'apellidos', 'direccion', 'email'];
+  if (required.some((key) => !validText(body[key])) || typeof body.contrasena !== 'string') return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
   if (!/^\d{10}$/.test(String(body.documento)) || !/^\d{10}$/.test(String(body.telefono))) return res.status(400).json({ error: 'Documento y teléfono deben tener exactamente 10 dígitos.' });
   if (!documentTypes.has(body.tipoDocumento.trim()) || !genders.has(body.genero.trim()) || !validName(body.nombres) || !validName(body.apellidos) || !validText(body.direccion, 6, 255) || !validText(body.ciudad, 2, 100)) return res.status(400).json({ error: 'Revisa los datos de identificación y contacto.' });
-  if (!validEmail(body.email) || !validPassword(body.contrasena)) return res.status(400).json({ error: 'Usa un correo válido y una contraseña de 8 a 72 caracteres con mayúscula, minúscula, número y símbolo.' });
+  if (!validEmail(body.email) || !validPassword(body.contrasena)) return res.status(400).json({ error: 'Usa un correo válido y una contraseña de mínimo 8 caracteres.' });
   try {
     const user = await withTransaction(async (client) => {
+      const duplicateDocument = await client.query('SELECT 1 FROM usuarios WHERE documento=$1 LIMIT 1', [body.documento.trim()]);
+      if (duplicateDocument.rowCount) throw Object.assign(new Error('Ya existe una cuenta registrada con ese número de documento.'), { status: 409 });
       const { rows: accountRows } = await client.query("SELECT nextval('usuarios_numero_cuenta_seq') AS numero");
-      const passwordHash = await bcrypt.hash(body.contrasena, 12);
+      const passwordHash = await hashPassword(body.contrasena);
       const { rows } = await client.query(
         `INSERT INTO usuarios (numero_cuenta,tipo_documento,documento,nombres,apellidos,email,telefono,direccion,ciudad,genero,password_hash,saldo,creado_en)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW()) RETURNING ${accountColumns}`,
@@ -240,7 +282,7 @@ app.post('/api/auth/register', authLimiter, async (req, res, next) => {
     });
     return res.status(201).json({ user: publicUser(user) });
   } catch (error) {
-    if (error.code === '23505') return res.status(409).json({ error: 'Ya existe un usuario con esos datos únicos.' });
+    if (error.code === '23505' && error.constraint === 'usuarios_documento_key') return res.status(409).json({ error: 'Ya existe una cuenta registrada con ese número de documento.' });
     return next(error);
   }
 });
@@ -248,16 +290,25 @@ app.post('/api/auth/register', authLimiter, async (req, res, next) => {
 app.post('/api/auth/login', authLimiter, async (req, res, next) => {
   const email = String(req.body?.email ?? '').trim().toLowerCase();
   const contrasena = req.body?.contrasena;
-  if (!/^\S+@\S+\.\S+$/.test(email) || !validText(contrasena)) return res.status(400).json({ error: 'Correo o contraseña inválidos.' });
+  if (!/^\S+@\S+\.\S+$/.test(email) || typeof contrasena !== 'string' || contrasena.length === 0) return res.status(400).json({ error: 'Correo o contraseña inválidos.' });
   try {
     const { rows } = await pool.query(`SELECT ${accountColumns}, password_hash FROM usuarios WHERE LOWER(email)=$1`, [email]);
-    if (!rows[0] || !(await bcrypt.compare(contrasena, rows[0].password_hash))) return res.status(401).json({ error: 'Correo o contraseña incorrectos.' });
-    if (rows[0].estado !== 'activa') return res.status(403).json({ error: 'Esta cuenta está desactivada. Contacta al administrador.' });
+    const matches = [];
+    for (const row of rows) {
+      if (await verifyPassword(contrasena, row.password_hash)) matches.push(row);
+    }
+    if (!matches.length) return res.status(401).json({ error: 'Correo o contraseña incorrectos.' });
+    if (matches.length > 1) return res.status(409).json({ error: 'Más de una cuenta coincide con estas credenciales. Contacta al administrador.' });
+    const user = matches[0];
+    if (user.estado !== 'activa') return res.status(403).json({ error: 'Esta cuenta está desactivada. Contacta al administrador.' });
+    if (!user.password_hash.startsWith(PASSWORD_HASH_PREFIX)) {
+      await pool.query('UPDATE usuarios SET password_hash=$1 WHERE id=$2', [await hashPassword(contrasena), user.id]);
+    }
     const sessionId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-    await pool.query('INSERT INTO sesiones (id, usuario_id, expira_en, ip_hash, agente_usuario) VALUES ($1,$2,$3,$4,$5)', [sessionId, rows[0].id, expiresAt, hashIp(req.ip), req.get('User-Agent')?.slice(0, 255) ?? null]);
-    res.cookie(SESSION_COOKIE, createToken(rows[0].id, sessionId), sessionCookieOptions());
-    return res.json({ user: publicUser(rows[0]) });
+    await pool.query('INSERT INTO sesiones (id, usuario_id, expira_en, ip_hash, agente_usuario) VALUES ($1,$2,$3,$4,$5)', [sessionId, user.id, expiresAt, hashIp(req.ip), req.get('User-Agent')?.slice(0, 255) ?? null]);
+    res.cookie(SESSION_COOKIE, createToken(user.id, sessionId), sessionCookieOptions());
+    return res.json({ user: publicUser(user) });
   } catch (error) { return next(error); }
 });
 
@@ -274,15 +325,15 @@ app.post('/api/auth/recovery', recoveryLimiter, async (req, res, next) => {
   if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Ingresa un correo válido.' });
   if (!recoveryEmailConfigured()) return res.status(503).json({ error: 'La recuperación por correo aún no está configurada.' });
   try {
-    const { rows } = await pool.query('SELECT id, email FROM usuarios WHERE LOWER(email)=$1', [email]);
-    if (rows[0]) {
+    const { rows } = await pool.query("SELECT id, email FROM usuarios WHERE LOWER(email)=$1 AND estado='activa'", [email]);
+    for (const user of rows) {
       const rawToken = crypto.randomBytes(32).toString('base64url');
       await withTransaction(async (client) => {
-        await client.query('UPDATE tokens_recuperacion_contrasena SET usado_en=NOW() WHERE usuario_id=$1 AND usado_en IS NULL', [rows[0].id]);
-        await client.query('INSERT INTO tokens_recuperacion_contrasena (usuario_id, token_hash, expira_en) VALUES ($1,$2,NOW() + INTERVAL \'15 minutes\')', [rows[0].id, hashResetToken(rawToken)]);
+        await client.query('UPDATE tokens_recuperacion_contrasena SET usado_en=NOW() WHERE usuario_id=$1 AND usado_en IS NULL', [user.id]);
+        await client.query('INSERT INTO tokens_recuperacion_contrasena (usuario_id, token_hash, expira_en) VALUES ($1,$2,NOW() + INTERVAL \'15 minutes\')', [user.id, hashResetToken(rawToken)]);
       });
       const resetUrl = `${appOrigin}/screens/nuevaContra.html?token=${encodeURIComponent(rawToken)}`;
-      await sendPasswordRecoveryEmail({ to: rows[0].email, resetUrl });
+      await sendPasswordRecoveryEmail({ to: user.email, resetUrl });
     }
     return res.status(202).json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
   } catch (error) { return next(error); }
@@ -291,7 +342,7 @@ app.post('/api/auth/recovery', recoveryLimiter, async (req, res, next) => {
 app.post('/api/auth/reset-password', recoveryLimiter, async (req, res, next) => {
   const resetToken = String(req.body?.resetToken ?? '');
   const contrasena = req.body?.contrasena;
-  if (!validText(contrasena, 12, 72) || resetToken.length < 40) return res.status(400).json({ error: 'La solicitud o contraseña no son válidas.' });
+  if (!validPassword(contrasena) || resetToken.length < 40) return res.status(400).json({ error: 'La solicitud o contraseña no son válidas.' });
   try {
     await withTransaction(async (client) => {
       const { rows } = await client.query(
@@ -301,8 +352,8 @@ app.post('/api/auth/reset-password', recoveryLimiter, async (req, res, next) => 
         [hashResetToken(resetToken)],
       );
       if (!rows[0]) throw Object.assign(new Error('El enlace venció o no es válido.'), { status: 401 });
-      if (await bcrypt.compare(contrasena, rows[0].password_hash)) throw Object.assign(new Error('La nueva contraseña debe ser diferente.'), { status: 400 });
-      await client.query('UPDATE usuarios SET password_hash=$1 WHERE id=$2', [await bcrypt.hash(contrasena, 12), rows[0].usuario_id]);
+      if (await verifyPassword(contrasena, rows[0].password_hash)) throw Object.assign(new Error('La nueva contraseña debe ser diferente.'), { status: 400 });
+      await client.query('UPDATE usuarios SET password_hash=$1 WHERE id=$2', [await hashPassword(contrasena), rows[0].usuario_id]);
       await client.query('UPDATE tokens_recuperacion_contrasena SET usado_en=NOW() WHERE id=$1', [rows[0].token_id]);
       await client.query('UPDATE sesiones SET revocada_en=NOW() WHERE usuario_id=$1 AND revocada_en IS NULL', [rows[0].usuario_id]);
     });
@@ -512,7 +563,7 @@ app.get('/api/admin/audit', adminLimiter, requireAuth, requireSuperuser, async (
 app.post('/api/transactions/withdraw', moneyLimiter, requireAuth, async (req, res, next) => {
   const value = amount(req.body?.valor, 10000);
   const key = idempotencyKey(req);
-  if (!value) return res.status(400).json({ error: 'El retiro mínimo es $10.000.' });
+  if (!value) return res.status(400).json({ error: 'El retiro mínimo es $ 10.000,00.' });
   try {
     const transaction = await withTransaction(async (client) => {
       const previous = await previousMovement(client, req.userId, key);
@@ -606,17 +657,25 @@ app.get('/api/transfers/recipients', moneyLimiter, requireAuth, async (req, res,
 
 app.get('/api/transfers/recipient', moneyLimiter, requireAuth, async (req, res, next) => {
   const destinationAccount = String(req.query.numeroCuenta ?? '');
-  if (!/^\d{16}$/.test(destinationAccount)) return res.status(400).json({ error: 'Ingresa una cuenta de 16 dígitos.' });
+  const value = amount(req.query.valor, 1);
+  if (!/^\d{16}$/.test(destinationAccount) || !value) return res.status(400).json({ error: 'Selecciona una cuenta e ingresa un valor válido.' });
   try {
     const { rows } = await pool.query(
-      'SELECT id, nombres, apellidos, estado FROM usuarios WHERE numero_cuenta=$1',
-      [destinationAccount],
+      `SELECT destino.id, destino.nombres, destino.apellidos, destino.estado, origen.saldo AS saldo_origen
+       FROM usuarios destino
+       JOIN usuarios origen ON origen.id=$2
+       WHERE destino.numero_cuenta=$1`,
+      [destinationAccount, req.userId],
     );
     const recipient = rows[0];
     if (!recipient) return res.status(404).json({ error: 'La cuenta destino no existe.' });
     if (recipient.estado !== 'activa') return res.status(400).json({ error: 'La cuenta destino está desactivada.' });
     if (Number(recipient.id) === req.userId) return res.status(400).json({ error: 'No puedes consignarte a tu propia cuenta.' });
-    return res.json({ recipient: { nombreCompleto: `${recipient.nombres} ${recipient.apellidos}`, numeroCuenta: destinationAccount } });
+    if (Number(recipient.saldo_origen) < value) return res.status(400).json({ error: 'Saldo insuficiente' });
+    return res.json({
+      recipient: { nombreCompleto: `${recipient.nombres} ${recipient.apellidos}`, numeroCuenta: destinationAccount },
+      balance: { disponible: Number(recipient.saldo_origen), restante: Number(recipient.saldo_origen) - value },
+    });
   } catch (error) { return next(error); }
 });
 
@@ -644,6 +703,73 @@ app.post('/api/transactions/transfer', moneyLimiter, requireAuth, async (req, re
       return { ...movementResult, destinatario: destinationName, cuentaDestino: destinationAccount };
     });
     return res.status(201).json({ transaction });
+  } catch (error) { return next(error); }
+});
+
+app.get('/api/loans', moneyLimiter, requireAuth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, referencia, monto, plazo_meses, tasa_mensual, intereses, total_pagar, cuota_mensual, estado, creado_en
+       FROM prestamos WHERE usuario_id=$1 ORDER BY creado_en DESC, id DESC LIMIT 10`,
+      [req.userId],
+    );
+    return res.json({
+      loans: rows.map(publicLoan),
+      configuration: { minimo: LOAN_MIN_COP, maximo: LOAN_MAX_COP, plazos: [...LOAN_TERMS], tasaMensual: LOAN_MONTHLY_RATE },
+    });
+  } catch (error) { return next(error); }
+});
+
+app.post('/api/loans/quote', moneyLimiter, requireAuth, (req, res) => {
+  const value = amount(req.body?.monto, LOAN_MIN_COP);
+  const term = Number(req.body?.plazoMeses);
+  if (!value || value > LOAN_MAX_COP || !LOAN_TERMS.has(term)) {
+    return res.status(400).json({ error: 'Selecciona un monto y un plazo válidos para el préstamo.' });
+  }
+  return res.json({ quote: loanQuote(value, term) });
+});
+
+app.post('/api/loans', moneyLimiter, requireAuth, async (req, res, next) => {
+  const value = amount(req.body?.monto, LOAN_MIN_COP);
+  const term = Number(req.body?.plazoMeses);
+  const key = idempotencyKey(req);
+  if (!value || value > LOAN_MAX_COP || !LOAN_TERMS.has(term) || !key) {
+    return res.status(400).json({ error: 'La solicitud de préstamo no es válida.' });
+  }
+  try {
+    const result = await withTransaction(async (client) => {
+      const previous = await previousMovement(client, req.userId, key);
+      if (previous) {
+        const { rows: previousLoans } = await client.query(
+          `SELECT id, referencia, monto, plazo_meses, tasa_mensual, intereses, total_pagar, cuota_mensual, estado, creado_en
+           FROM prestamos WHERE transaccion_id=$1`,
+          [previous.id],
+        );
+        if (!previousLoans[0]) throw Object.assign(new Error('La clave de la solicitud ya fue utilizada.'), { status: 409 });
+        return { transaction: previous, loan: previousLoans[0] };
+      }
+
+      const { rows: users } = await client.query('SELECT saldo, estado FROM usuarios WHERE id=$1 FOR UPDATE', [req.userId]);
+      if (!users[0] || users[0].estado !== 'activa') throw Object.assign(new Error('La cuenta no está disponible para solicitar préstamos.'), { status: 403 });
+      const quote = loanQuote(value, term);
+      await client.query('UPDATE usuarios SET saldo=saldo+$1 WHERE id=$2', [value, req.userId]);
+      const transaction = await movement(client, {
+        userId: req.userId,
+        type: 'Desembolso de préstamo',
+        concept: `Préstamo de demostración a ${term} meses`,
+        value,
+        idempotencyKey: key,
+      });
+      const { rows: loans } = await client.query(
+        `INSERT INTO prestamos
+          (usuario_id, transaccion_id, referencia, monto, plazo_meses, tasa_mensual, intereses, total_pagar, cuota_mensual, estado, creado_en)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'desembolsado',NOW())
+         RETURNING id, referencia, monto, plazo_meses, tasa_mensual, intereses, total_pagar, cuota_mensual, estado, creado_en`,
+        [req.userId, transaction.id, transaction.referencia, quote.monto, quote.plazoMeses, quote.tasaMensual, quote.intereses, quote.totalPagar, quote.cuotaMensual],
+      );
+      return { transaction, loan: loans[0] };
+    });
+    return res.status(201).json({ transaction: result.transaction, loan: publicLoan(result.loan) });
   } catch (error) { return next(error); }
 });
 
@@ -698,7 +824,7 @@ app.use('/html', express.static(path.join(rootDir, 'html')));
 app.use('/screens', express.static(path.join(rootDir, 'screens')));
 app.get('/', (_req, res) => res.redirect('/html/login.html'));
 app.use((error, _req, res, _next) => {
-  console.error(error);
+  if (!error.status || error.status >= 500) console.error(error);
   res.status(error.status ?? 500).json({ error: error.status ? error.message : 'Error interno del servidor.' });
 });
 

@@ -5,6 +5,12 @@ const form = document.getElementById('loginForm');
 const message = document.getElementById('formMessage');
 const submitButton = form.querySelector('button[type="submit"]');
 const showMessage = (text, type = 'error') => setMessage(message, text, type);
+const params = new URLSearchParams(window.location.search);
+
+if (params.get('registro') === 'exitoso') {
+  showMessage('Cuenta creada correctamente. Ya puedes iniciar sesión.', 'success');
+  history.replaceState({}, document.title, window.location.pathname);
+}
 
 currentUser({ redirectOnUnauthorized: false }).then(() => window.location.replace('/html/dashboard.html')).catch(() => {});
 

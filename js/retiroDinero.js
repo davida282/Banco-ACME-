@@ -60,7 +60,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const valor = Number(amountInput.value);
 
     if (!Number.isSafeInteger(valor) || valor < 10000) {
-      showMessage('El retiro mínimo es de $10.000.');
+      showMessage('El retiro mínimo es de $ 10.000,00.');
       amountInput.focus();
       return;
     }
